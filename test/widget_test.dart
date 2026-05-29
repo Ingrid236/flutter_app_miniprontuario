@@ -1,30 +1,31 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:flutter_app_miniprontuario/core/utils/secure_storage_service.dart';
+import 'package:flutter_app_miniprontuario/features/auth/data/auth_repository.dart';
 import 'package:flutter_app_miniprontuario/main.dart';
+import 'features/auth/auth_service_test.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App loads and renders Login Screen', (
+    WidgetTester tester,
+  ) async {
+    final fakeSecureStorage = FakeSecureStorageService();
+    final fakeAuthRepository = FakeAuthRepository();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Build our app and trigger a frame with mocked providers.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          secureStorageProvider.overrideWithValue(fakeSecureStorage),
+          authRepositoryProvider.overrideWithValue(fakeAuthRepository),
+        ],
+        child: const MyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the title and login controls are displayed
+    expect(find.text('MiniProntuário'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
   });
 }
