@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/secure_storage_service.dart';
+import '../../patient/data/patient_repository.dart';
 import '../data/procedure_repository.dart';
 import '../domain/procedure.dart';
 import '../domain/procedure_service.dart';
@@ -7,11 +8,11 @@ import '../domain/procedure_service.dart';
 // Provider for ProcedureService
 final procedureServiceProvider = Provider<ProcedureService>((ref) {
   final repository = ref.watch(procedureRepositoryProvider);
+  final patientRepository = ref.watch(patientRepositoryProvider);
   final secureStorage = ref.watch(secureStorageProvider);
-  return ProcedureService(repository, secureStorage);
+  return ProcedureService(repository, patientRepository, secureStorage);
 });
 
-// Family provider to list procedures for a patient
 final proceduresListProvider = FutureProvider.family
     .autoDispose<List<Procedure>, String>((ref, patientId) async {
       final service = ref.watch(procedureServiceProvider);

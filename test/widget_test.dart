@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_app_miniprontuario/core/utils/shared_preferences_provider.dart';
 import 'package:flutter_app_miniprontuario/core/utils/secure_storage_service.dart';
 import 'package:flutter_app_miniprontuario/features/auth/data/auth_repository.dart';
 import 'package:flutter_app_miniprontuario/main.dart';
@@ -9,6 +11,9 @@ void main() {
   testWidgets('App loads and renders Login Screen', (
     WidgetTester tester,
   ) async {
+    SharedPreferences.setMockInitialValues({});
+    final sharedPreferences = await SharedPreferences.getInstance();
+
     final fakeSecureStorage = FakeSecureStorageService();
     final fakeAuthRepository = FakeAuthRepository();
 
@@ -16,6 +21,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          sharedPreferencesProvider.overrideWithValue(sharedPreferences),
           secureStorageProvider.overrideWithValue(fakeSecureStorage),
           authRepositoryProvider.overrideWithValue(fakeAuthRepository),
         ],

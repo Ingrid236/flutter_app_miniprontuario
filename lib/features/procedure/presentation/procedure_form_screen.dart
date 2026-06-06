@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../domain/procedure.dart';
 import 'procedure_providers.dart';
 
@@ -72,9 +75,14 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
     _selectedDate = procedure.date;
     _selectedStatus = procedure.status;
     _toothController.text = procedure.tooth ?? '';
-    _costController.text = procedure.cost != null
-        ? procedure.cost.toString()
-        : '';
+    
+    if (procedure.cost != null) {
+      final locale = Localizations.maybeLocaleOf(context)?.toString() ?? 'pt_BR';
+      final formatter = NumberFormat.simpleCurrency(locale: locale);
+      _costController.text = formatter.format(procedure.cost);
+    } else {
+      _costController.text = '';
+    }
     _observationsController.text = procedure.observations ?? '';
 
     _isInitialized = true;
@@ -86,18 +94,6 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF06B6D4),
-              onPrimary: Colors.white,
-              surface: Color(0xFF1E293B),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -116,7 +112,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
     if (_selectedType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Por favor, selecione o tipo de procedimento.'),
+          content: Text('Tipo de procedimento ausente. O tipo de procedimento é obrigatório para registrar a intervenção. Por favor, selecione uma das opções da lista.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -127,8 +123,9 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
         ? _customTypeController.text.trim()
         : _selectedType!;
 
-    final cost = _costController.text.trim().isNotEmpty
-        ? double.tryParse(_costController.text.trim())
+    final cleanCostText = _costController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final cost = cleanCostText.isNotEmpty
+        ? (double.tryParse(cleanCostText) ?? 0.0) / 100.0
         : null;
 
     final controller = ref.read(procedureControllerProvider.notifier);
@@ -203,12 +200,10 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
         data: (procedure) {
           if (procedure == null) {
             return Scaffold(
-              backgroundColor: const Color(0xFF0F172A),
               appBar: AppBar(title: const Text('Editar Procedimento')),
               body: const Center(
                 child: Text(
                   'Procedimento não encontrado.',
-                  style: TextStyle(color: Colors.white),
                 ),
               ),
             );
@@ -217,11 +212,9 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
           return _buildFormScaffold(isLoading);
         },
         loading: () => const Scaffold(
-          backgroundColor: const Color(0xFF0F172A),
           body: Center(child: CircularProgressIndicator()),
         ),
         error: (err, _) => Scaffold(
-          backgroundColor: const Color(0xFF0F172A),
           body: Center(
             child: Text(
               'Erro ao carregar dados: $err',
@@ -237,7 +230,6 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
 
   Widget _buildFormScaffold(bool isLoading) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -245,7 +237,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
           _isEditMode ? 'Editar Procedimento' : 'Registrar Procedimento',
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => context.pop(),
         ),
       ),
@@ -260,21 +252,21 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF334155).withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Detalhes da Intervenção',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF06B6D4),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -283,14 +275,14 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                     _buildLabel('Tipo de Procedimento'),
                     DropdownButtonFormField<String>(
                       value: _selectedType,
-                      dropdownColor: const Color(0xFF1E293B),
-                      style: const TextStyle(color: Colors.white),
+                      dropdownColor: Theme.of(context).colorScheme.surface,
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color(0xFF0F172A),
-                        prefixIcon: const Icon(
+                        fillColor: Theme.of(context).scaffoldBackgroundColor,
+                        prefixIcon: Icon(
                           Icons.medical_services_outlined,
-                          color: Color(0xFF64748B),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 16,
@@ -301,9 +293,9 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      hint: const Text(
+                      hint: Text(
                         'Selecione uma opção...',
-                        style: TextStyle(color: Color(0xFF64748B)),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                       items: _predefinedTypes.map((type) {
                         return DropdownMenuItem<String>(
@@ -325,10 +317,11 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                         controller: _customTypeController,
                         hint: 'Digite o tipo do procedimento',
                         icon: Icons.edit_note,
+                        textInputAction: TextInputAction.next,
                         validator: (value) {
                           if (_showCustomTypeField &&
                               (value == null || value.trim().isEmpty)) {
-                            return 'Por favor, especifique o procedimento';
+                            return 'Procedimento personalizado não especificado. Como você selecionou a opção "Outro", é necessário descrever qual procedimento foi realizado. Por favor, digite o nome do procedimento no campo correspondente.';
                           }
                           return null;
                         },
@@ -341,14 +334,14 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                     _buildLabel('Status'),
                     DropdownButtonFormField<String>(
                       value: _selectedStatus,
-                      dropdownColor: const Color(0xFF1E293B),
-                      style: const TextStyle(color: Colors.white),
+                      dropdownColor: Theme.of(context).colorScheme.surface,
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: const Color(0xFF0F172A),
-                        prefixIcon: const Icon(
+                        fillColor: Theme.of(context).scaffoldBackgroundColor,
+                        prefixIcon: Icon(
                           Icons.info_outline,
-                          color: Color(0xFF64748B),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 16,
@@ -397,14 +390,14 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                                     vertical: 16,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF0F172A),
+                                    color: Theme.of(context).scaffoldBackgroundColor,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.calendar_month_outlined,
-                                        color: Color(0xFF64748B),
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                                         size: 20,
                                       ),
                                       const SizedBox(width: 10),
@@ -413,8 +406,8 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                                           _selectedDate == null
                                               ? 'DD/MM/AAAA'
                                               : _formatDate(_selectedDate),
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.onSurface,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -437,6 +430,27 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                                 hint: 'Ex. 18, 36',
                                 icon: Icons.tag,
                                 keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                validator: (value) {
+                                  if (value != null && value.trim().isNotEmpty) {
+                                    final toothNum = int.tryParse(value.trim());
+                                    if (toothNum == null) {
+                                      return 'Dente inválido. A identificação do dente deve ser um número inteiro. Por favor, insira apenas números (ex. 18, 36).';
+                                    }
+                                    final isValidPermanent = (toothNum >= 11 && toothNum <= 18) ||
+                                                             (toothNum >= 21 && toothNum <= 28) ||
+                                                             (toothNum >= 31 && toothNum <= 38) ||
+                                                             (toothNum >= 41 && toothNum <= 48);
+                                    final isValidDeciduous = (toothNum >= 51 && toothNum <= 55) ||
+                                                             (toothNum >= 61 && toothNum <= 65) ||
+                                                             (toothNum >= 71 && toothNum <= 75) ||
+                                                             (toothNum >= 81 && toothNum <= 85);
+                                    if (!isValidPermanent && !isValidDeciduous) {
+                                      return 'Número de dente inválido. A numeração deve seguir o padrão FDI (11-48 para permanentes, 51-85 para decíduos). Por favor, corrija para um dente existente.';
+                                    }
+                                  }
+                                  return null;
+                                },
                               ),
                             ],
                           ),
@@ -450,16 +464,24 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                     _buildLabel('Valor / Custo (Opcional)'),
                     _buildTextField(
                       controller: _costController,
-                      hint: '0.00',
+                      hint: NumberFormat.simpleCurrency(
+                        locale: Localizations.maybeLocaleOf(context)?.toString() ?? 'pt_BR',
+                      ).format(0.0),
                       icon: Icons.payments_outlined,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
+                      inputFormatters: [
+                        CurrencyInputFormatter(
+                          locale: Localizations.maybeLocaleOf(context)?.toString() ?? 'pt_BR',
+                        ),
+                      ],
+                      textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value != null && value.trim().isNotEmpty) {
-                          final parsed = double.tryParse(value.trim());
-                          if (parsed == null) {
-                            return 'Valor inválido. Use pontos.';
+                          final clean = value.replaceAll(RegExp(r'[^0-9]'), '');
+                          if (clean.isEmpty) {
+                            return 'Valor inválido. O custo deve ser preenchido com caracteres numéricos. Por favor, digite um valor válido (ex. 150,00).';
                           }
                         }
                         return null;
@@ -475,21 +497,21 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF334155).withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Observações Clínicas (Opcional)',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF06B6D4),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -499,6 +521,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                           'E.g. Procedimento realizado sob anestesia local, sem intercorrências...',
                       icon: Icons.description_outlined,
                       maxLines: 4,
+                      textInputAction: TextInputAction.done,
                     ),
                   ],
                 ),
@@ -514,16 +537,16 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  backgroundColor: const Color(0xFF06B6D4),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
                 child: isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       )
                     : const Text(
@@ -546,8 +569,8 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Color(0xFFCBD5E1),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
           fontSize: 14,
         ),
@@ -561,19 +584,23 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
     required IconData icon,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    TextInputAction? textInputAction,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      inputFormatters: inputFormatters,
+      textInputAction: textInputAction,
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFF64748B)),
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         filled: true,
-        fillColor: const Color(0xFF0F172A),
-        prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
+        fillColor: Theme.of(context).scaffoldBackgroundColor,
+        prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 16,
           horizontal: 16,
@@ -584,7 +611,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF06B6D4), width: 1.5),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
         ),
       ),
       validator: validator,

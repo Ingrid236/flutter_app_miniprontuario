@@ -3,7 +3,9 @@ import 'package:flutter_app_miniprontuario/core/utils/secure_storage_service.dar
 import 'package:flutter_app_miniprontuario/features/procedure/data/procedure_repository.dart';
 import 'package:flutter_app_miniprontuario/features/procedure/domain/procedure.dart';
 import 'package:flutter_app_miniprontuario/features/procedure/domain/procedure_service.dart';
+import 'package:flutter_app_miniprontuario/features/patient/domain/patient.dart';
 import '../auth/auth_service_test.dart'; // To reuse FakeSecureStorageService
+import '../patient/patient_service_test.dart';
 
 class FakeProcedureRepository implements ProcedureRepository {
   final Map<String, Procedure> _procedures = {};
@@ -41,6 +43,7 @@ class FakeProcedureRepository implements ProcedureRepository {
 
 void main() {
   late FakeProcedureRepository procedureRepository;
+  late FakePatientRepository patientRepository;
   late FakeSecureStorageService secureStorage;
   late ProcedureService procedureService;
   const String dentistId = 'dentist-123';
@@ -48,11 +51,28 @@ void main() {
 
   setUp(() async {
     procedureRepository = FakeProcedureRepository();
+    patientRepository = FakePatientRepository();
     secureStorage = FakeSecureStorageService();
-    procedureService = ProcedureService(procedureRepository, secureStorage);
+    procedureService = ProcedureService(
+      procedureRepository,
+      patientRepository,
+      secureStorage,
+    );
 
     // Set active session
     await secureStorage.saveSession(dentistId);
+
+    // Seed patient to satisfy dentist-patient ownership check
+    await patientRepository.createPatient(Patient(
+      id: patientId,
+      dentistId: dentistId,
+      name: 'Jane Doe',
+      birthDate: DateTime(1990, 5, 15),
+      cpf: '111.111.111-11',
+      phone: '(11) 98888-8888',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ));
   });
 
   group('ProcedureService Tests', () {

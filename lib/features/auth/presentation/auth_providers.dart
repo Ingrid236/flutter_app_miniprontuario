@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/secure_storage_service.dart';
+import '../../patient/presentation/patient_providers.dart';
 import '../data/auth_repository.dart';
 import '../domain/auth_service.dart';
 import '../domain/dentist.dart';
@@ -118,6 +119,7 @@ class AuthController extends Notifier<AsyncValue<void>> {
       final authService = ref.read(authServiceProvider);
       await authService.logout();
       ref.read(activeDentistIdProvider.notifier).setSession(null);
+      ref.invalidate(patientsListProvider);
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

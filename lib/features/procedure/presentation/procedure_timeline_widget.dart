@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../domain/procedure.dart';
 import 'procedure_providers.dart';
 
@@ -27,15 +28,15 @@ class ProcedureTimelineWidget extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70),
-            ),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('Excluir', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text('Excluir'),
           ),
         ],
       ),
@@ -67,17 +68,17 @@ class ProcedureTimelineWidget extends ConsumerWidget {
           return Container(
             padding: const EdgeInsets.all(24.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFF334155).withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Nenhum procedimento registrado ainda.',
                 style: TextStyle(
-                  color: Color(0xFF64748B),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
                   fontSize: 14,
                 ),
@@ -109,14 +110,14 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                               ? const Color(0xFF10B981)
                               : const Color(0xFFF59E0B), // Green vs Amber
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
                         ),
                       ),
                       if (index != procedures.length - 1)
                         Expanded(
                           child: Container(
                             width: 2,
-                            color: const Color(0xFF334155),
+                            color: Theme.of(context).colorScheme.outlineVariant,
                           ),
                         ),
                     ],
@@ -129,10 +130,10 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFF334155).withOpacity(0.3),
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
                       child: Column(
@@ -145,10 +146,10 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                               Expanded(
                                 child: Text(
                                   procedure.type,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                               ),
@@ -189,28 +190,36 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                           const SizedBox(height: 10),
 
                           // Date, Tooth, Cost Info
-                          Row(
-                            children: [
-                              _buildMetaItem(
-                                Icons.calendar_month_outlined,
-                                _formatDate(procedure.date),
-                              ),
-                              if (procedure.tooth != null &&
-                                  procedure.tooth!.trim().isNotEmpty) ...[
-                                const SizedBox(width: 12),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
                                 _buildMetaItem(
-                                  Icons.tag,
-                                  'Dente ${procedure.tooth}',
+                                  context,
+                                  Icons.calendar_month_outlined,
+                                  _formatDate(procedure.date),
                                 ),
+                                if (procedure.tooth != null &&
+                                    procedure.tooth!.trim().isNotEmpty) ...[
+                                  const SizedBox(width: 12),
+                                  _buildMetaItem(
+                                    context,
+                                    Icons.tag,
+                                    'Dente ${procedure.tooth}',
+                                  ),
+                                ],
+                                if (procedure.cost != null) ...[
+                                  const SizedBox(width: 12),
+                                  _buildMetaItem(
+                                    context,
+                                    Icons.payments_outlined,
+                                    NumberFormat.simpleCurrency(
+                                      locale: Localizations.maybeLocaleOf(context)?.toString() ?? 'pt_BR',
+                                    ).format(procedure.cost),
+                                  ),
+                                ],
                               ],
-                              if (procedure.cost != null) ...[
-                                const SizedBox(width: 12),
-                                _buildMetaItem(
-                                  Icons.payments_outlined,
-                                  'R\$ ${procedure.cost!.toStringAsFixed(2)}',
-                                ),
-                              ],
-                            ],
+                            ),
                           ),
 
                           // Observations
@@ -221,20 +230,20 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                               padding: const EdgeInsets.all(10.0),
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F172A),
+                                color: Theme.of(context).scaffoldBackgroundColor,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 procedure.observations!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF94A3B8), // Slate 400
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
                           ],
 
-                          const Divider(color: Color(0xFF334155), height: 24),
+                          const Divider(height: 24),
 
                           // Card actions (Edit, Delete)
                           Row(
@@ -245,7 +254,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                   '/patients/$patientId/procedures/${procedure.id}/edit',
                                 ),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFF06B6D4),
+                                  foregroundColor: Theme.of(context).colorScheme.primary,
                                 ),
                                 icon: const Icon(Icons.edit_outlined, size: 14),
                                 label: const Text(
@@ -258,7 +267,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                 onPressed: () =>
                                     _confirmDelete(context, ref, procedure),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: Colors.redAccent,
+                                  foregroundColor: Theme.of(context).colorScheme.error,
                                 ),
                                 icon: const Icon(
                                   Icons.delete_outline,
@@ -292,21 +301,21 @@ class ProcedureTimelineWidget extends ConsumerWidget {
           padding: const EdgeInsets.all(20.0),
           child: Text(
             'Erro ao carregar histórico: $err',
-            style: const TextStyle(color: Colors.redAccent),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMetaItem(IconData icon, String text) {
+  Widget _buildMetaItem(BuildContext context, IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: const Color(0xFF64748B)),
+        Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
         const SizedBox(width: 4),
         Text(
           text,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
     );
