@@ -76,23 +76,23 @@ class PatientDetailScreen extends ConsumerWidget {
     final patientState = ref.watch(patientDetailProvider(patientId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('Ficha do Paciente'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => context.go('/'),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Color(0xFF06B6D4)),
+            icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary),
             onPressed: () => context.push('/patients/$patientId/edit'),
             tooltip: 'Editar Paciente',
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
             onPressed: () => _confirmDelete(context, ref),
             tooltip: 'Excluir Paciente',
           ),
@@ -101,10 +101,10 @@ class PatientDetailScreen extends ConsumerWidget {
       body: patientState.when(
         data: (patient) {
           if (patient == null) {
-            return const Center(
+            return Center(
               child: Text(
                 'Paciente não encontrado.',
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 16),
               ),
             );
           }
@@ -120,10 +120,10 @@ class PatientDetailScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: const Color(0xFF334155).withOpacity(0.5),
+                      color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                   ),
                   child: Column(
@@ -131,24 +131,27 @@ class PatientDetailScreen extends ConsumerWidget {
                     children: [
                       Text(
                         patient.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 12),
                       _buildInfoRow(
+                        context,
                         Icons.cake_outlined,
                         'Nascimento: ${_formatDate(patient.birthDate)} ($age anos)',
                       ),
                       const SizedBox(height: 8),
                       _buildInfoRow(
+                        context,
                         Icons.badge_outlined,
                         'CPF: ${patient.cpf}',
                       ),
                       const SizedBox(height: 8),
                       _buildInfoRow(
+                        context,
                         Icons.phone_outlined,
                         'Telefone: ${patient.phone}',
                       ),
@@ -159,18 +162,19 @@ class PatientDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
 
                 // Clinical alerts header
-                const Text(
+                Text(
                   'Alertas Clínicos e Anamnese',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF06B6D4),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 12),
 
                 // Allergies Card (Red alert if exists)
                 _buildAlertCard(
+                  context: context,
                   title: 'Alergias',
                   content: patient.allergies,
                   icon: Icons.warning_amber_rounded,
@@ -181,6 +185,7 @@ class PatientDetailScreen extends ConsumerWidget {
 
                 // Medications Card (Amber/Orange alert)
                 _buildAlertCard(
+                  context: context,
                   title: 'Medicamentos em Uso',
                   content: patient.medications,
                   icon: Icons.medication_liquid_outlined,
@@ -191,48 +196,55 @@ class PatientDetailScreen extends ConsumerWidget {
 
                 // Chronic Diseases Card (Blue/Teal alert)
                 _buildAlertCard(
+                  context: context,
                   title: 'Doenças Crônicas',
                   content: patient.chronicDiseases,
                   icon: Icons.healing_outlined,
-                  color: const Color(0xFF3B82F6),
+                  color: Theme.of(context).colorScheme.secondary,
                   emptyText: 'Nenhuma doença crônica relatada.',
                 ),
 
                 const SizedBox(height: 24),
 
                 // Procedures History Title and add procedure
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Histórico de Procedimentos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () =>
-                          context.push('/patients/$patientId/procedures/new'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF06B6D4),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      Text(
+                        'Histórico de Procedimentos',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text(
-                        'Adicionar',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ElevatedButton.icon(
+                        onPressed: () =>
+                            context.push('/patients/$patientId/procedures/new'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                        ),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text(
+                          'Adicionar',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 16),
@@ -247,27 +259,28 @@ class PatientDetailScreen extends ConsumerWidget {
         error: (err, _) => Center(
           child: Text(
             'Erro ao carregar dados: $err',
-            style: const TextStyle(color: Colors.redAccent),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF94A3B8)),
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
         const SizedBox(width: 8),
         Text(
           text,
-          style: const TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
         ),
       ],
     );
   }
 
   Widget _buildAlertCard({
+    required BuildContext context,
     required String title,
     required String? content,
     required IconData icon,
@@ -279,12 +292,12 @@ class PatientDetailScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: hasContent
               ? color.withOpacity(0.4)
-              : const Color(0xFF334155).withOpacity(0.3),
+              : Theme.of(context).colorScheme.outlineVariant,
           width: hasContent ? 1.5 : 1,
         ),
       ),
@@ -293,7 +306,7 @@ class PatientDetailScreen extends ConsumerWidget {
         children: [
           Icon(
             icon,
-            color: hasContent ? color : const Color(0xFF475569),
+            color: hasContent ? color : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
             size: 24,
           ),
           const SizedBox(width: 14),
@@ -306,7 +319,7 @@ class PatientDetailScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: hasContent ? color : const Color(0xFF94A3B8),
+                    color: hasContent ? color : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -315,8 +328,8 @@ class PatientDetailScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 14,
                     color: hasContent
-                        ? const Color(0xFFE2E8F0)
-                        : const Color(0xFF475569),
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
                     fontStyle: hasContent ? FontStyle.normal : FontStyle.italic,
                   ),
                 ),

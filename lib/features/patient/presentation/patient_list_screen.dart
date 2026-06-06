@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../../core/theme/theme_provider.dart';
 import 'patient_providers.dart';
 
 class PatientListScreen extends ConsumerStatefulWidget {
@@ -33,15 +34,15 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white70),
-            ),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: const Text('Sair', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text('Sair'),
           ),
         ],
       ),
@@ -59,9 +60,9 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
   Widget build(BuildContext context) {
     final dentistAsync = ref.watch(currentDentistProvider);
     final patientsAsync = ref.watch(patientsListProvider);
+    final themeMode = ref.watch(themeProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,12 +70,19 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
             // Professional Profile Header
             Container(
               padding: const EdgeInsets.all(20.0),
-              decoration: const BoxDecoration(
-                color: Color(0xFF1E293B), // Slate 800
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: dentistAsync.when(
                 data: (dentist) {
@@ -85,16 +93,16 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF06B6D4).withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFF06B6D4),
+                            color: Theme.of(context).colorScheme.primary,
                             width: 1.5,
                           ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.person,
-                          color: Color(0xFF06B6D4),
+                          color: Theme.of(context).colorScheme.primary,
                           size: 28,
                         ),
                       ),
@@ -105,22 +113,68 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                           children: [
                             Text(
                               dentist.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'CRO: ${dentist.cro}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF94A3B8), // Slate 400
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
                         ),
+                      ),
+                      PopupMenuButton<ThemeMode>(
+                        icon: Icon(
+                          themeMode == ThemeMode.system
+                              ? Icons.brightness_auto
+                              : themeMode == ThemeMode.light
+                                  ? Icons.light_mode
+                                  : Icons.dark_mode,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        tooltip: 'Alterar Tema',
+                        onSelected: (mode) {
+                          ref.read(themeProvider.notifier).setThemeMode(mode);
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: ThemeMode.system,
+                            child: Row(
+                              children: [
+                                Icon(Icons.brightness_auto),
+                                SizedBox(width: 8),
+                                Text('Sistema'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: ThemeMode.light,
+                            child: Row(
+                              children: [
+                                Icon(Icons.light_mode),
+                                SizedBox(width: 8),
+                                Text('Claro'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: ThemeMode.dark,
+                            child: Row(
+                              children: [
+                                Icon(Icons.dark_mode),
+                                SizedBox(width: 8),
+                                Text('Escuro'),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       IconButton(
                         icon: const Icon(
@@ -149,33 +203,33 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Pacientes',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _searchController,
                     onChanged: _onSearchChanged,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: 'Buscar por nome ou CPF...',
-                      hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       filled: true,
-                      fillColor: const Color(0xFF1E293B),
-                      prefixIcon: const Icon(
+                      fillColor: Theme.of(context).colorScheme.surface,
+                      prefixIcon: Icon(
                         Icons.search,
-                        color: Color(0xFF64748B),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.clear,
-                                color: Color(0xFF64748B),
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                               onPressed: () {
                                 _searchController.clear();
@@ -191,8 +245,8 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF06B6D4),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
                           width: 1.5,
                         ),
                       ),
@@ -216,14 +270,14 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                           Icon(
                             Icons.people_outline,
                             size: 64,
-                            color: const Color(0xFF475569).withOpacity(0.8),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Nenhum paciente encontrado',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Color(0xFF64748B),
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -243,11 +297,18 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: const Color(0xFF334155).withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.outlineVariant,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
@@ -256,49 +317,54 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                           ),
                           title: Text(
                             patient.name,
-                            style: const TextStyle(
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           subtitle: Padding(
                             padding: const EdgeInsets.only(top: 6.0),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.badge_outlined,
-                                  size: 14,
-                                  color: Color(0xFF64748B),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  patient.cpf,
-                                  style: const TextStyle(
-                                    color: Color(0xFF94A3B8),
-                                    fontSize: 13,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.badge_outlined,
+                                    size: 14,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                const Icon(
-                                  Icons.phone_outlined,
-                                  size: 14,
-                                  color: Color(0xFF64748B),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  patient.phone,
-                                  style: const TextStyle(
-                                    color: Color(0xFF94A3B8),
-                                    fontSize: 13,
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    patient.cpf,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 16),
+                                  Icon(
+                                    Icons.phone_outlined,
+                                    size: 14,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    patient.phone,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          trailing: const Icon(
+                          trailing: Icon(
                             Icons.chevron_right,
-                            color: Color(0xFF06B6D4),
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           onTap: () => context.push('/patients/${patient.id}'),
                         ),
@@ -324,8 +390,8 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/patients/new'),
-        backgroundColor: const Color(0xFF06B6D4),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         child: const Icon(Icons.add, size: 28),
       ),
     );

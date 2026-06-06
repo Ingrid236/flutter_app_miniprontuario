@@ -72,8 +72,8 @@ class PatientService {
 
     // Get original patient
     final original = await _patientRepository.getPatientById(id);
-    if (original == null) {
-      throw Exception('Paciente não encontrado.');
+    if (original == null || original.dentistId != dentistId) {
+      throw Exception('Paciente não encontrado ou acesso não autorizado.');
     }
 
     // Check unique CPF per dentist if CPF is changed
@@ -101,13 +101,21 @@ class PatientService {
   }
 
   Future<void> deletePatient(String id) async {
-    await _getRequiredSession();
+    final dentistId = await _getRequiredSession();
+    final original = await _patientRepository.getPatientById(id);
+    if (original == null || original.dentistId != dentistId) {
+      throw Exception('Paciente não encontrado ou acesso não autorizado.');
+    }
     await _patientRepository.deletePatient(id);
   }
 
   Future<Patient?> getPatient(String id) async {
-    await _getRequiredSession();
-    return await _patientRepository.getPatientById(id);
+    final dentistId = await _getRequiredSession();
+    final patient = await _patientRepository.getPatientById(id);
+    if (patient != null && patient.dentistId != dentistId) {
+      throw Exception('Acesso negado: você não tem permissão para visualizar os dados deste paciente.');
+    }
+    return patient;
   }
 
   Future<List<Patient>> getPatients() async {
