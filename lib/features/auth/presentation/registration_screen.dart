@@ -26,9 +26,33 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   final _phoneFormatter = AppFormatters.phoneFormatter;
 
   final List<String> _brazilianStates = const [
-    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-    'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-    'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+    'AC',
+    'AL',
+    'AP',
+    'AM',
+    'BA',
+    'CE',
+    'DF',
+    'ES',
+    'GO',
+    'MA',
+    'MT',
+    'MS',
+    'MG',
+    'PA',
+    'PB',
+    'PR',
+    'PE',
+    'PI',
+    'RJ',
+    'RN',
+    'RS',
+    'RO',
+    'RR',
+    'SC',
+    'SP',
+    'SE',
+    'TO',
   ];
   String _selectedCroState = 'SP';
 
@@ -53,7 +77,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
           cpf: _cpfController.text.trim(),
-          cro: 'CRO-$_selectedCroState ${_croNumberController.text.trim()}',
+          cro: '$_selectedCroState-${_croNumberController.text.trim()}',
           phone: _phoneController.text.trim(),
         );
 
@@ -88,7 +112,10 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -168,7 +195,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           if (value == null || value.trim().isEmpty) {
                             return 'E-mail ausente. O e-mail é necessário para realizar o login e receber alertas. Por favor, preencha o campo de e-mail.';
                           }
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value.trim())) {
                             return 'E-mail inválido. O formato digitado não é um e-mail válido. Por favor, insira um e-mail no formato correto (exemplo@odontologia.com).';
                           }
                           return null;
@@ -188,7 +217,10 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           if (value == null || value.trim().isEmpty) {
                             return 'CPF ausente. O CPF é obrigatório para identificação profissional única. Por favor, insira seu CPF completo.';
                           }
-                          final cleanCpf = value.replaceAll(RegExp(r'[^0-9]'), '');
+                          final cleanCpf = value.replaceAll(
+                            RegExp(r'[^0-9]'),
+                            '',
+                          );
                           if (cleanCpf.length != 11) {
                             return 'CPF incompleto. O CPF deve conter exatamente 11 dígitos numéricos. Por favor, preencha o CPF por completo (000.000.000-00).';
                           }
@@ -206,12 +238,21 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                             width: 90,
                             child: DropdownButtonFormField<String>(
                               value: _selectedCroState,
-                              dropdownColor: Theme.of(context).colorScheme.surface,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              dropdownColor: Theme.of(
+                                context,
+                              ).colorScheme.surface,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: Theme.of(context).scaffoldBackgroundColor,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                                fillColor: Theme.of(
+                                  context,
+                                ).scaffoldBackgroundColor,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 16,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide.none,
@@ -237,28 +278,50 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                             child: TextFormField(
                               controller: _croNumberController,
                               keyboardType: TextInputType.number,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                               decoration: InputDecoration(
                                 hintText: 'Número de Registro',
-                                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                hintStyle: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
                                 filled: true,
-                                fillColor: Theme.of(context).scaffoldBackgroundColor,
-                                prefixIcon: Icon(Icons.verified_outlined, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                                contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                                fillColor: Theme.of(
+                                  context,
+                                ).scaffoldBackgroundColor,
+                                prefixIcon: Icon(
+                                  Icons.verified_outlined,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide.none,
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+                                  borderSide: BorderSide(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    width: 1.5,
+                                  ),
                                 ),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'CRO ausente. O número do registro é obrigatório. Por favor, insira seu CRO.';
                                 }
-                                if (!RegExp(r'^[0-9]+$').hasMatch(value.trim())) {
+                                if (!RegExp(
+                                  r'^[0-9]+$',
+                                ).hasMatch(value.trim())) {
                                   return 'Formato incorreto. O CRO deve conter apenas números. Por favor, insira somente dígitos.';
                                 }
                                 return null;
@@ -289,7 +352,10 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           if (value == null || value.trim().isEmpty) {
                             return 'Telefone ausente. O telefone é necessário para contato com a clínica. Por favor, insira seu número de telefone com DDD.';
                           }
-                          final cleanPhone = value.replaceAll(RegExp(r'[^0-9]'), '');
+                          final cleanPhone = value.replaceAll(
+                            RegExp(r'[^0-9]'),
+                            '',
+                          );
                           if (cleanPhone.length < 10) {
                             return 'Telefone incompleto. O número inserido é curto demais. Por favor, insira o DDD + 8 ou 9 dígitos.';
                           }
@@ -325,8 +391,12 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
                         ),
                         child: isLoading
                             ? SizedBox(
@@ -334,7 +404,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
                                 ),
                               )
                             : const Text(
@@ -390,10 +462,15 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        hintStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         filled: true,
         fillColor: Theme.of(context).scaffoldBackgroundColor,
-        prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         contentPadding: const EdgeInsets.symmetric(vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -401,7 +478,10 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 1.5,
+          ),
         ),
       ),
       validator: validator,

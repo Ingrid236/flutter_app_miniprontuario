@@ -204,6 +204,100 @@ class PatientDetailScreen extends ConsumerWidget {
                   emptyText: 'Nenhuma doença crônica relatada.',
                 ),
 
+                const SizedBox(height: 20),
+
+                Text(
+                  'Análise de Risco por Inteligência Artificial',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Consumer(
+                  builder: (context, ref, child) {
+                    final aiState = ref.watch(patientAiAnalysisProvider(patientId));
+                    return aiState.when(
+                      data: (analysis) => Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.psychology_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Relatório de Risco Clínico IA',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              analysis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                height: 1.4,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      loading: () => Container(
+                        padding: const EdgeInsets.all(24.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: const Column(
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 12),
+                            Text('A IA está analisando o prontuário...'),
+                          ],
+                        ),
+                      ),
+                      error: (err, _) => Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+                          ),
+                        ),
+                        child: Text(
+                          'Erro ao gerar análise da IA: $err',
+                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
                 const SizedBox(height: 24),
 
                 // Procedures History Title and add procedure

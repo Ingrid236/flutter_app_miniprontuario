@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../../../core/database/database_helper.dart';
+import '../../../core/network/api_client.dart';
 import '../domain/procedure.dart';
 
 abstract class ProcedureRepository {
@@ -11,67 +10,50 @@ abstract class ProcedureRepository {
   Future<List<Procedure>> getProceduresForPatient(String patientId);
 }
 
-class SqliteProcedureRepository implements ProcedureRepository {
-  final DatabaseHelper _databaseHelper;
+class RestProcedureRepository implements ProcedureRepository {
+  final ApiClient _apiClient;
 
-  SqliteProcedureRepository(this._databaseHelper);
+  RestProcedureRepository(this._apiClient);
 
   @override
   Future<void> createProcedure(Procedure procedure) async {
-    final db = await _databaseHelper.database;
-    await db.insert(
-      'procedures',
-      procedure.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.fail,
+    await _apiClient.dio.post(
+      '/patients/${procedure.patientId}/procedures',
+      data: procedure.toMap(),
     );
   }
 
   @override
   Future<void> updateProcedure(Procedure procedure) async {
-    final db = await _databaseHelper.database;
-    await db.update(
-      'procedures',
-      procedure.toMap(),
-      where: 'id = ?',
-      whereArgs: [procedure.id],
+    await _apiClient.dio.put(
+      '/procedures/${procedure.id}',
+      data: procedure.toMap(),
     );
   }
 
   @override
   Future<void> deleteProcedure(String id) async {
-    final db = await _databaseHelper.database;
-    await db.delete('procedures', where: 'id = ?', whereArgs: [id]);
+    await _apiClient.dio.delete('/procedures/$id');
   }
 
   @override
   Future<Procedure?> getProcedureById(String id) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'procedures',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-
-    if (maps.isEmpty) return null;
-    return Procedure.fromMap(maps.first);
+    final response = await _apiClient.dio.get('/procedures/$id');
+    if (response.data != null) {
+      return Procedure.fromMap(response.data as Map<String, dynamic>);
+    }
+    return null;
   }
 
   @override
   Future<List<Procedure>> getProceduresForPatient(String patientId) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'procedures',
-      where: 'patient_id = ?',
-      whereArgs: [patientId],
-      orderBy: 'date DESC', // Sort reverse chronologically
-    );
-    return maps.map((map) => Procedure.fromMap(map)).toList();
+    final response = await _apiClient.dio.get('/patients/$patientId/procedures');
+    final list = response.data as List<dynamic>;
+    return list.map((map) => Procedure.fromMap(map as Map<String, dynamic>)).toList();
   }
 }
 
-// Provider for ProcedureRepository
 final procedureRepositoryProvider = Provider<ProcedureRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return SqliteProcedureRepository(dbHelper);
+  final apiClient = ref.watch(apiClientProvider);
+  return RestProcedureRepository(apiClient);
 });

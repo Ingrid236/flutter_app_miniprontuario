@@ -1,60 +1,77 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../../../core/database/database_helper.dart';
+import '../../../core/network/api_client.dart';
 import '../domain/dentist.dart';
 
 abstract class AuthRepository {
-  Future<void> createDentist(Dentist dentist);
-  Future<Dentist?> getDentistByEmail(String email);
-  Future<Dentist?> getDentistById(String id);
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String cpf,
+    required String cro,
+    required String phone,
+  });
+
+  Future<Map<String, dynamic>> login(String email, String password);
+  Future<Dentist?> getMe();
+  Future<void> logout(String refreshToken);
 }
 
-class SqliteAuthRepository implements AuthRepository {
-  final DatabaseHelper _databaseHelper;
+class RestAuthRepository implements AuthRepository {
+  final ApiClient _apiClient;
 
-  SqliteAuthRepository(this._databaseHelper);
+  RestAuthRepository(this._apiClient);
 
   @override
-  Future<void> createDentist(Dentist dentist) async {
-    final db = await _databaseHelper.database;
-    await db.insert(
-      'dentists',
-      dentist.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.fail,
-    );
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String cpf,
+    required String cro,
+    required String phone,
+  }) async {
+    await _apiClient.dio.post('/auth/register', data: {
+      'name': name,
+      'email': email,
+      'password': password,
+      'cpf': cpf,
+      'cro': cro,
+      'phone': phone,
+    });
   }
 
   @override
-  Future<Dentist?> getDentistByEmail(String email) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'dentists',
-      where: 'email = ?',
-      whereArgs: [email],
-      limit: 1,
-    );
-
-    if (maps.isEmpty) return null;
-    return Dentist.fromMap(maps.first);
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    final response = await _apiClient.dio.post('/auth/login', data: {
+      'email': email,
+      'password': password,
+    });
+    return response.data as Map<String, dynamic>;
   }
 
   @override
-  Future<Dentist?> getDentistById(String id) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'dentists',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
+  Future<Dentist?> getMe() async {
+    try {
+      final response = await _apiClient.dio.get('/auth/me');
+      if (response.data != null) {
+        return Dentist.fromMap(response.data as Map<String, dynamic>);
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
+  }
 
-    if (maps.isEmpty) return null;
-    return Dentist.fromMap(maps.first);
+  @override
+  Future<void> logout(String refreshToken) async {
+    await _apiClient.dio.post('/auth/logout', data: {
+      'refreshToken': refreshToken,
+    });
   }
 }
 
-// Provider for AuthRepository
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return SqliteAuthRepository(dbHelper);
+  final apiClient = ref.watch(apiClientProvider);
+  return RestAuthRepository(apiClient);
 });

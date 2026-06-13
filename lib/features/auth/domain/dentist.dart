@@ -8,16 +8,16 @@ class Dentist {
   final String phone;
   final DateTime createdAt;
 
-  const Dentist({
+  Dentist({
     required this.id,
     required this.name,
     required this.email,
-    required this.passwordHash,
+    this.passwordHash = '',
     required this.cpf,
     required this.cro,
     required this.phone,
-    required this.createdAt,
-  });
+    DateTime? createdAt,
+  }) : this.createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
     return {
@@ -37,11 +37,13 @@ class Dentist {
       id: map['id'] as String,
       name: map['name'] as String,
       email: map['email'] as String,
-      passwordHash: map['password_hash'] as String,
-      cpf: map['cpf'] as String,
-      cro: map['cro'] as String,
-      phone: map['phone'] as String,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      passwordHash: (map['password_hash'] ?? '') as String,
+      cpf: (map['cpf'] ?? '') as String,
+      cro: (map['cro'] ?? '') as String,
+      phone: (map['phone'] ?? '') as String,
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'] as String)
+          : null,
     );
   }
 

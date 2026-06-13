@@ -28,32 +28,33 @@ class Patient {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'dentist_id': dentistId,
       'name': name,
-      'birth_date': birthDate.toIso8601String(),
+      'birthDate': birthDate.toIso8601String().split('T').first,
       'cpf': cpf,
       'phone': phone,
       'allergies': allergies,
       'medications': medications,
-      'chronic_diseases': chronicDiseases,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'systemicDiseases': chronicDiseases,
     };
   }
 
   factory Patient.fromMap(Map<String, dynamic> map) {
     return Patient(
       id: map['id'] as String,
-      dentistId: map['dentist_id'] as String,
+      dentistId: (map['dentist_id'] ?? '') as String,
       name: map['name'] as String,
-      birthDate: DateTime.parse(map['birth_date'] as String),
+      birthDate: DateTime.parse(map['birthDate'] ?? map['birth_date'] as String),
       cpf: map['cpf'] as String,
-      phone: map['phone'] as String,
+      phone: (map['phone'] ?? '') as String,
       allergies: map['allergies'] as String?,
       medications: map['medications'] as String?,
-      chronicDiseases: map['chronic_diseases'] as String?,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      updatedAt: DateTime.parse(map['updated_at'] as String),
+      chronicDiseases: (map['systemicDiseases'] ?? map['chronic_diseases']) as String?,
+      createdAt: map['createdAt'] != null 
+          ? DateTime.parse(map['createdAt'] as String)
+          : (map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : DateTime.now()),
+      updatedAt: map['updatedAt'] != null
+          ? DateTime.parse(map['updatedAt'] as String)
+          : (map['updated_at'] != null ? DateTime.parse(map['updated_at'] as String) : DateTime.now()),
     );
   }
 

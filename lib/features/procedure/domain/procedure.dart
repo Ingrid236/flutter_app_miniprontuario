@@ -24,28 +24,28 @@ class Procedure {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'patient_id': patientId,
-      'type': type,
-      'date': date.toIso8601String(),
+      'date': date.toIso8601String().split('T').first,
+      'description': type,
       'tooth': tooth,
-      'observations': observations,
+      'notes': observations,
       'status': status,
       'cost': cost,
-      'created_at': createdAt.toIso8601String(),
     };
   }
 
   factory Procedure.fromMap(Map<String, dynamic> map) {
     return Procedure(
       id: map['id'] as String,
-      patientId: map['patient_id'] as String,
-      type: map['type'] as String,
+      patientId: (map['patientId'] ?? map['patient_id'] ?? '') as String,
+      type: (map['description'] ?? map['type'] ?? '') as String,
       date: DateTime.parse(map['date'] as String),
       tooth: map['tooth'] as String?,
-      observations: map['observations'] as String?,
-      status: map['status'] as String,
+      observations: (map['notes'] ?? map['observations']) as String?,
+      status: (map['status'] ?? 'PLANNED') as String,
       cost: map['cost'] != null ? (map['cost'] as num).toDouble() : null,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
+          : (map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : DateTime.now()),
     );
   }
 

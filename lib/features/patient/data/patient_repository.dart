@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../../../core/database/database_helper.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/utils/secure_storage_service.dart';
 import '../domain/patient.dart';
 
 abstract class PatientRepository {
@@ -13,93 +13,77 @@ abstract class PatientRepository {
   Future<List<Patient>> searchPatients(String dentistId, String query);
 }
 
-class SqlitePatientRepository implements PatientRepository {
-  final DatabaseHelper _databaseHelper;
+class RestPatientRepository implements PatientRepository {
+  final ApiClient _apiClient;
+  final SecureStorageService _secureStorage;
 
-  SqlitePatientRepository(this._databaseHelper);
+  RestPatientRepository(this._apiClient, this._secureStorage);
 
   @override
   Future<void> createPatient(Patient patient) async {
-    final db = await _databaseHelper.database;
-    await db.insert(
-      'patients',
-      patient.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.fail,
+    await _apiClient.dio.post(
+      '/patients',
+      data: patient.toMap(),
     );
   }
 
   @override
   Future<void> updatePatient(Patient patient) async {
-    final db = await _databaseHelper.database;
-    await db.update(
-      'patients',
-      patient.toMap(),
-      where: 'id = ?',
-      whereArgs: [patient.id],
+    await _apiClient.dio.put(
+      '/patients/${patient.id}',
+      data: patient.toMap(),
     );
   }
 
   @override
   Future<void> deletePatient(String id) async {
-    final db = await _databaseHelper.database;
-    await db.delete('patients', where: 'id = ?', whereArgs: [id]);
+    await _apiClient.dio.delete('/patients/$id');
   }
 
   @override
   Future<Patient?> getPatientById(String id) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'patients',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-
-    if (maps.isEmpty) return null;
-    return Patient.fromMap(maps.first);
+    final response = await _apiClient.dio.get('/patients/$id');
+    if (response.data != null) {
+      final dentistId = await _secureStorage.getSession() ?? '';
+      final pMap = Map<String, dynamic>.from(response.data as Map);
+      pMap['dentist_id'] = dentistId;
+      return Patient.fromMap(pMap);
+    }
+    return null;
   }
 
   @override
   Future<List<Patient>> getPatientsForDentist(String dentistId) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'patients',
-      where: 'dentist_id = ?',
-      whereArgs: [dentistId],
-      orderBy: 'name ASC',
-    );
-    return maps.map((map) => Patient.fromMap(map)).toList();
+    final response = await _apiClient.dio.get('/patients');
+    final list = response.data as List<dynamic>;
+    return list.map((map) {
+      final pMap = Map<String, dynamic>.from(map as Map);
+      pMap['dentist_id'] = dentistId;
+      return Patient.fromMap(pMap);
+    }).toList();
   }
 
   @override
   Future<Patient?> getPatientByCpf(String dentistId, String cpf) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'patients',
-      where: 'dentist_id = ? AND cpf = ?',
-      whereArgs: [dentistId, cpf],
-      limit: 1,
-    );
-
-    if (maps.isEmpty) return null;
-    return Patient.fromMap(maps.first);
+    final list = await getPatientsForDentist(dentistId);
+    final results = list.where((p) => p.cpf == cpf).toList();
+    return results.isEmpty ? null : results.first;
   }
 
   @override
   Future<List<Patient>> searchPatients(String dentistId, String query) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'patients',
-      where: 'dentist_id = ? AND (name LIKE ? OR cpf LIKE ?)',
-      whereArgs: [dentistId, '%$query%', '%$query%'],
-      orderBy: 'name ASC',
-    );
-    return maps.map((map) => Patient.fromMap(map)).toList();
+    final list = await getPatientsForDentist(dentistId);
+    if (query.isEmpty) return list;
+    final lowercaseQuery = query.toLowerCase();
+    return list.where((p) {
+      return p.name.toLowerCase().contains(lowercaseQuery) ||
+          p.cpf.contains(lowercaseQuery);
+    }).toList();
   }
 }
 
-// Provider for PatientRepository
 final patientRepositoryProvider = Provider<PatientRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return SqlitePatientRepository(dbHelper);
+  final apiClient = ref.watch(apiClientProvider);
+  final secureStorage = ref.watch(secureStorageProvider);
+  return RestPatientRepository(apiClient, secureStorage);
 });

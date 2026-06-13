@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
-import 'package:uuid/uuid.dart';
 import '../../../core/utils/secure_storage_service.dart';
 import '../data/auth_repository.dart';
 import 'dentist.dart';
@@ -8,7 +5,6 @@ import 'dentist.dart';
 class AuthService {
   final AuthRepository _authRepository;
   final SecureStorageService _secureStorage;
-  static const _uuid = Uuid();
 
   AuthService(this._authRepository, this._secureStorage);
 
@@ -20,57 +16,49 @@ class AuthService {
     required String cro,
     required String phone,
   }) async {
-    final existing = await _authRepository.getDentistByEmail(email);
-    if (existing != null) {
-      throw Exception('Dentist with email $email already exists');
-    }
-
-    final id = _uuid.v4();
-    final passwordHash = _hashPassword(password);
-    final dentist = Dentist(
-      id: id,
+    await _authRepository.register(
       name: name,
       email: email,
-      passwordHash: passwordHash,
+      password: password,
       cpf: cpf,
       cro: cro,
       phone: phone,
-      createdAt: DateTime.now(),
     );
 
-    await _authRepository.createDentist(dentist);
-    await _secureStorage.saveSession(dentist.id);
-    return dentist;
+    return await login(email: email, password: password);
   }
 
   Future<Dentist?> login({
     required String email,
     required String password,
   }) async {
-    final dentist = await _authRepository.getDentistByEmail(email);
-    if (dentist == null) return null;
+    final response = await _authRepository.login(email, password);
+    final accessToken = response['accessToken'] as String;
+    final refreshToken = response['refreshToken'] as String;
+    final dentistId = response['user']['id'] as String;
 
-    final hash = _hashPassword(password);
-    if (dentist.passwordHash == hash) {
-      await _secureStorage.saveSession(dentist.id);
-      return dentist;
-    }
-    return null;
+    await _secureStorage.saveTokens(accessToken, refreshToken);
+    await _secureStorage.saveSession(dentistId);
+
+    return await _authRepository.getMe();
   }
 
   Future<void> logout() async {
-    await _secureStorage.clearSession();
+    try {
+      final refreshToken = await _secureStorage.getRefreshToken();
+      if (refreshToken != null) {
+        await _authRepository.logout(refreshToken);
+      }
+    } catch (_) {
+      // Ignore and proceed to local logout in case of server failure/revocation
+    } finally {
+      await _secureStorage.clearSession();
+    }
   }
 
   Future<Dentist?> getCurrentDentist() async {
     final dentistId = await _secureStorage.getSession();
     if (dentistId == null) return null;
-    return await _authRepository.getDentistById(dentistId);
-  }
-
-  String _hashPassword(String password) {
-    final bytes = utf8.encode(password);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
+    return await _authRepository.getMe();
   }
 }

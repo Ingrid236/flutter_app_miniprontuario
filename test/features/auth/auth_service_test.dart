@@ -7,24 +7,61 @@ import 'package:flutter_app_miniprontuario/features/auth/domain/dentist.dart';
 // Fake Auth Repository for testing
 class FakeAuthRepository implements AuthRepository {
   final Map<String, Dentist> _dentists = {};
+  String? _activeEmail;
 
   @override
-  Future<void> createDentist(Dentist dentist) async {
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String cpf,
+    required String cro,
+    required String phone,
+  }) async {
+    if (_dentists.values.any((d) => d.email == email)) {
+      throw Exception('Email already registered');
+    }
+    final dentist = Dentist(
+      id: 'dentist-id-${_dentists.length}',
+      name: name,
+      email: email,
+      cpf: cpf,
+      cro: cro,
+      phone: phone,
+    );
     _dentists[dentist.id] = dentist;
   }
 
   @override
-  Future<Dentist?> getDentistByEmail(String email) async {
-    try {
-      return _dentists.values.firstWhere((d) => d.email == email);
-    } catch (_) {
-      return null;
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    if (password == 'wrongpassword') {
+      throw Exception('Invalid credentials');
     }
+    final dentist = _dentists.values.firstWhere(
+      (d) => d.email == email,
+      orElse: () => throw Exception('Invalid credentials'),
+    );
+    _activeEmail = email;
+    return {
+      'accessToken': 'dummy-access-token',
+      'refreshToken': 'dummy-refresh-token',
+      'user': {
+        'id': dentist.id,
+        'name': dentist.name,
+        'email': dentist.email,
+      }
+    };
   }
 
   @override
-  Future<Dentist?> getDentistById(String id) async {
-    return _dentists[id];
+  Future<Dentist?> getMe() async {
+    if (_activeEmail == null) return null;
+    return _dentists.values.firstWhere((d) => d.email == _activeEmail);
+  }
+
+  @override
+  Future<void> logout(String refreshToken) async {
+    _activeEmail = null;
   }
 }
 
@@ -43,13 +80,31 @@ class FakeSecureStorageService implements SecureStorageService {
   }
 
   @override
+  Future<void> saveTokens(String accessToken, String refreshToken) async {
+    _data['access_token'] = accessToken;
+    _data['refresh_token'] = refreshToken;
+  }
+
+  @override
   Future<String?> getSession() async {
     return _data['active_dentist_id'];
   }
 
   @override
+  Future<String?> getAccessToken() async {
+    return _data['access_token'];
+  }
+
+  @override
+  Future<String?> getRefreshToken() async {
+    return _data['refresh_token'];
+  }
+
+  @override
   Future<void> clearSession() async {
     _data.remove('active_dentist_id');
+    _data.remove('access_token');
+    _data.remove('refresh_token');
   }
 }
 
@@ -116,7 +171,6 @@ void main() {
           phone: '(11) 99999-9999',
         );
 
-        // Clear session so we can test if login saves it
         await secureStorage.clearSession();
 
         final dentist = await authService.login(
@@ -130,7 +184,7 @@ void main() {
       },
     );
 
-    test('login should return null with invalid credentials', () async {
+    test('login should fail with invalid credentials', () async {
       await authService.register(
         name: 'Dr. John Doe',
         email: 'john@example.com',
@@ -140,21 +194,24 @@ void main() {
         phone: '(11) 99999-9999',
       );
 
-      final dentist = await authService.login(
-        email: 'john@example.com',
-        password: 'wrongpassword',
+      expect(
+        () => authService.login(
+          email: 'john@example.com',
+          password: 'wrongpassword',
+        ),
+        throwsException,
       );
-
-      expect(dentist, isNull);
     });
 
     test('logout should clear secure session', () async {
       await secureStorage.saveSession('some-id');
+      await secureStorage.saveTokens('token', 'refresh');
       expect(await secureStorage.getSession(), 'some-id');
 
       await authService.logout();
 
       expect(await secureStorage.getSession(), isNull);
+      expect(await secureStorage.getAccessToken(), isNull);
     });
 
     test(

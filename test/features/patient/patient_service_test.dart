@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_app_miniprontuario/core/utils/secure_storage_service.dart';
 import 'package:flutter_app_miniprontuario/features/patient/data/patient_repository.dart';
 import 'package:flutter_app_miniprontuario/features/patient/domain/patient.dart';
 import 'package:flutter_app_miniprontuario/features/patient/domain/patient_service.dart';
@@ -160,7 +159,7 @@ void main() {
     test(
       'updatePatient should fail if CPF is changed to an existing patient\'s CPF',
       () async {
-        final p1 = await patientService.createPatient(
+        await patientService.createPatient(
           name: 'Jane Doe',
           birthDate: DateTime(1990, 5, 15),
           cpf: '111.111.111-11',

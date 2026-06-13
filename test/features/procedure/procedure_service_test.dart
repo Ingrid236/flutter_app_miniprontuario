@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_app_miniprontuario/core/utils/secure_storage_service.dart';
 import 'package:flutter_app_miniprontuario/features/procedure/data/procedure_repository.dart';
 import 'package:flutter_app_miniprontuario/features/procedure/domain/procedure.dart';
 import 'package:flutter_app_miniprontuario/features/procedure/domain/procedure_service.dart';
