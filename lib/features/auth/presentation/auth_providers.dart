@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/secure_storage_service.dart';
-import '../data/auth_repository.dart';
 import '../domain/auth_service.dart';
 import '../domain/dentist.dart';
 
@@ -22,21 +21,22 @@ final activeDentistIdProvider =
       return ActiveDentistIdNotifier();
     });
 
-// Provider for AuthService
-final authServiceProvider = Provider<AuthService>((ref) {
-  final repository = ref.watch(authRepositoryProvider);
-  final secureStorage = ref.watch(secureStorageProvider);
-  return AuthService(repository, secureStorage);
-});
-
-// A simple notifier/status provider that checks the session on startup.
-final sessionCheckProvider = FutureProvider<String?>((ref) async {
+// Session check on startup — checks if access token exists in secure storage.
+final sessionCheckProvider = FutureProvider<bool>((ref) async {
   final secureStorage = ref.read(secureStorageProvider);
-  final dentistId = await secureStorage.getSession();
-  if (dentistId != null) {
-    ref.read(activeDentistIdProvider.notifier).setSession(dentistId);
+  final authService = ref.read(authServiceProvider);
+
+  final hasToken = await secureStorage.hasSession();
+  if (hasToken) {
+    // Validate token by calling /auth/me (triggers refresh if needed)
+    final dentist = await authService.getCurrentDentist();
+    if (dentist != null) {
+      await secureStorage.saveDentistId(dentist.id);
+      ref.read(activeDentistIdProvider.notifier).setSession(dentist.id);
+      return true;
+    }
   }
-  return dentistId;
+  return false;
 });
 
 // Provider for the active dentist object
@@ -59,17 +59,9 @@ class AuthController extends Notifier<AsyncValue<void>> {
     try {
       final authService = ref.read(authServiceProvider);
       final dentist = await authService.login(email: email, password: password);
-      if (dentist != null) {
-        ref.read(activeDentistIdProvider.notifier).setSession(dentist.id);
-        state = const AsyncValue.data(null);
-        return true;
-      } else {
-        state = AsyncValue.error(
-          Exception('E-mail ou senha incorretos.'),
-          StackTrace.current,
-        );
-        return false;
-      }
+      ref.read(activeDentistIdProvider.notifier).setSession(dentist.id);
+      state = const AsyncValue.data(null);
+      return true;
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
       return false;
@@ -87,7 +79,8 @@ class AuthController extends Notifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final authService = ref.read(authServiceProvider);
-      final dentist = await authService.register(
+      // Step 1: Register account
+      await authService.register(
         name: name,
         email: email,
         password: password,
@@ -95,17 +88,11 @@ class AuthController extends Notifier<AsyncValue<void>> {
         cro: cro,
         phone: phone,
       );
-      if (dentist != null) {
-        ref.read(activeDentistIdProvider.notifier).setSession(dentist.id);
-        state = const AsyncValue.data(null);
-        return true;
-      } else {
-        state = AsyncValue.error(
-          Exception('Erro ao criar conta profissional.'),
-          StackTrace.current,
-        );
-        return false;
-      }
+      // Step 2: Auto-login after registration
+      final dentist = await authService.login(email: email, password: password);
+      ref.read(activeDentistIdProvider.notifier).setSession(dentist.id);
+      state = const AsyncValue.data(null);
+      return true;
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
       return false;
@@ -129,3 +116,4 @@ final authControllerProvider =
     NotifierProvider<AuthController, AsyncValue<void>>(() {
       return AuthController();
     });
+

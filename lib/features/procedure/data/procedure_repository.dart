@@ -1,77 +1,56 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../../../core/database/database_helper.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/network/api_constants.dart';
 import '../domain/procedure.dart';
 
 abstract class ProcedureRepository {
-  Future<void> createProcedure(Procedure procedure);
-  Future<void> updateProcedure(Procedure procedure);
+  Future<Procedure> createProcedure(String patientId, Procedure procedure);
+  Future<Procedure> updateProcedure(Procedure procedure);
   Future<void> deleteProcedure(String id);
-  Future<Procedure?> getProcedureById(String id);
   Future<List<Procedure>> getProceduresForPatient(String patientId);
 }
 
-class SqliteProcedureRepository implements ProcedureRepository {
-  final DatabaseHelper _databaseHelper;
+class RemoteProcedureRepository implements ProcedureRepository {
+  final ApiClient _api;
 
-  SqliteProcedureRepository(this._databaseHelper);
+  RemoteProcedureRepository(this._api);
 
   @override
-  Future<void> createProcedure(Procedure procedure) async {
-    final db = await _databaseHelper.database;
-    await db.insert(
-      'procedures',
-      procedure.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.fail,
+  Future<Procedure> createProcedure(String patientId, Procedure procedure) async {
+    final data = await _api.post(
+      ApiConstants.proceduresForPatient(patientId),
+      procedure.toJson(),
     );
+    return Procedure.fromJson(data);
   }
 
   @override
-  Future<void> updateProcedure(Procedure procedure) async {
-    final db = await _databaseHelper.database;
-    await db.update(
-      'procedures',
-      procedure.toMap(),
-      where: 'id = ?',
-      whereArgs: [procedure.id],
+  Future<Procedure> updateProcedure(Procedure procedure) async {
+    final data = await _api.put(
+      ApiConstants.procedure(procedure.id),
+      procedure.toJson(),
     );
+    return Procedure.fromJson(data);
   }
 
   @override
   Future<void> deleteProcedure(String id) async {
-    final db = await _databaseHelper.database;
-    await db.delete('procedures', where: 'id = ?', whereArgs: [id]);
-  }
-
-  @override
-  Future<Procedure?> getProcedureById(String id) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'procedures',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-
-    if (maps.isEmpty) return null;
-    return Procedure.fromMap(maps.first);
+    await _api.delete(ApiConstants.procedure(id));
   }
 
   @override
   Future<List<Procedure>> getProceduresForPatient(String patientId) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'procedures',
-      where: 'patient_id = ?',
-      whereArgs: [patientId],
-      orderBy: 'date DESC', // Sort reverse chronologically
+    final list = await _api.getList(
+      ApiConstants.proceduresForPatient(patientId),
     );
-    return maps.map((map) => Procedure.fromMap(map)).toList();
+    return list
+        .map((e) => Procedure.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }
 
 // Provider for ProcedureRepository
 final procedureRepositoryProvider = Provider<ProcedureRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return SqliteProcedureRepository(dbHelper);
+  final api = ref.watch(apiClientProvider);
+  return RemoteProcedureRepository(api);
 });

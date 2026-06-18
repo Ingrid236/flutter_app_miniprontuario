@@ -113,7 +113,7 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'CRO: ${dentist.cro}',
+                              'CRO: ${dentist.cro ?? 'N/A'}',
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Color(0xFF94A3B8), // Slate 400
@@ -287,7 +287,7 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  patient.phone,
+                                   patient.phone ?? 'Não informado',
                                   style: const TextStyle(
                                     color: Color(0xFF94A3B8),
                                     fontSize: 13,

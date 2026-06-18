@@ -22,7 +22,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Excluir Procedimento'),
         content: Text(
-          'Deseja realmente excluir o procedimento "${procedure.type}"?',
+          'Deseja realmente excluir o procedimento "${procedure.description}"?',
         ),
         actions: [
           TextButton(
@@ -70,7 +70,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
               color: const Color(0xFF1E293B),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFF334155).withOpacity(0.3),
+                color: const Color(0xFF334155).withValues(alpha: 0.3),
               ),
             ),
             child: const Center(
@@ -92,7 +92,6 @@ class ProcedureTimelineWidget extends ConsumerWidget {
           itemCount: procedures.length,
           itemBuilder: (context, index) {
             final procedure = procedures[index];
-            final isCompleted = procedure.status == 'Completed';
 
             return IntrinsicHeight(
               child: Row(
@@ -105,9 +104,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                         width: 14,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: isCompleted
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFF59E0B), // Green vs Amber
+                          color: const Color(0xFF10B981), // Always green now
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
@@ -132,7 +129,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                         color: const Color(0xFF1E293B),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFF334155).withOpacity(0.3),
+                          color: const Color(0xFF334155).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -144,7 +141,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  procedure.type,
+                                  procedure.description,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -152,43 +149,11 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              // Status Badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      (isCompleted
-                                              ? const Color(0xFF10B981)
-                                              : const Color(0xFFF59E0B))
-                                          .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isCompleted
-                                        ? const Color(0xFF10B981)
-                                        : const Color(0xFFF59E0B),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  isCompleted ? 'Concluído' : 'Planejado',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: isCompleted
-                                        ? const Color(0xFF10B981)
-                                        : const Color(0xFFF59E0B),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                           const SizedBox(height: 10),
 
-                          // Date, Tooth, Cost Info
+                          // Date, Tooth
                           Row(
                             children: [
                               _buildMetaItem(
@@ -203,19 +168,12 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                   'Dente ${procedure.tooth}',
                                 ),
                               ],
-                              if (procedure.cost != null) ...[
-                                const SizedBox(width: 12),
-                                _buildMetaItem(
-                                  Icons.payments_outlined,
-                                  'R\$ ${procedure.cost!.toStringAsFixed(2)}',
-                                ),
-                              ],
                             ],
                           ),
 
-                          // Observations
-                          if (procedure.observations != null &&
-                              procedure.observations!.trim().isNotEmpty) ...[
+                          // Notes
+                          if (procedure.notes != null &&
+                              procedure.notes!.trim().isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.all(10.0),
@@ -225,7 +183,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
-                                procedure.observations!,
+                                procedure.notes!,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: Color(0xFF94A3B8), // Slate 400

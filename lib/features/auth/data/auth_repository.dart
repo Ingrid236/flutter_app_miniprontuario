@@ -1,60 +1,86 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
-import '../../../core/database/database_helper.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/network/api_constants.dart';
+import '../../../core/utils/secure_storage_service.dart';
 import '../domain/dentist.dart';
 
 abstract class AuthRepository {
-  Future<void> createDentist(Dentist dentist);
-  Future<Dentist?> getDentistByEmail(String email);
-  Future<Dentist?> getDentistById(String id);
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String cpf,
+    required String cro,
+    String? phone,
+  });
+
+  Future<Dentist> login({
+    required String email,
+    required String password,
+  });
+
+  Future<Dentist> getMe();
 }
 
-class SqliteAuthRepository implements AuthRepository {
-  final DatabaseHelper _databaseHelper;
+class RemoteAuthRepository implements AuthRepository {
+  final ApiClient _api;
+  final SecureStorageService _storage;
 
-  SqliteAuthRepository(this._databaseHelper);
+  RemoteAuthRepository(this._api, this._storage);
 
   @override
-  Future<void> createDentist(Dentist dentist) async {
-    final db = await _databaseHelper.database;
-    await db.insert(
-      'dentists',
-      dentist.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.fail,
-    );
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String cpf,
+    required String cro,
+    String? phone,
+  }) async {
+    await _api.postPublic(ApiConstants.register, {
+      'name': name,
+      'email': email,
+      'password': password,
+      'cpf': cpf,
+      'cro': cro,
+      if (phone != null) 'phone': phone,
+    });
   }
 
   @override
-  Future<Dentist?> getDentistByEmail(String email) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'dentists',
-      where: 'email = ?',
-      whereArgs: [email],
-      limit: 1,
+  Future<Dentist> login({
+    required String email,
+    required String password,
+  }) async {
+    final data = await _api.postPublic(ApiConstants.login, {
+      'email': email,
+      'password': password,
+    });
+
+    // Persist tokens
+    await _storage.saveTokens(
+      accessToken: data['token'] as String,
+      refreshToken: '', // Backend only returns 'token', no refresh token
     );
 
-    if (maps.isEmpty) return null;
-    return Dentist.fromMap(maps.first);
+    // Cache dentist ID from login response
+    final user = data['user'] as Map<String, dynamic>;
+    await _storage.saveDentistId(user['id'] as String);
+
+    return Dentist.fromJson(user);
   }
 
   @override
-  Future<Dentist?> getDentistById(String id) async {
-    final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'dentists',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-
-    if (maps.isEmpty) return null;
-    return Dentist.fromMap(maps.first);
+  Future<Dentist> getMe() async {
+    final data = await _api.get(ApiConstants.me);
+    return Dentist.fromJson(data);
   }
 }
 
 // Provider for AuthRepository
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final dbHelper = ref.watch(databaseHelperProvider);
-  return SqliteAuthRepository(dbHelper);
+  final api = ref.watch(apiClientProvider);
+  final storage = ref.watch(secureStorageProvider);
+  return RemoteAuthRepository(api, storage);
 });
+

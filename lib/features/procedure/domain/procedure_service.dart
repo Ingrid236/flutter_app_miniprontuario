@@ -1,95 +1,60 @@
-import 'package:uuid/uuid.dart';
-import '../../../core/utils/secure_storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/procedure_repository.dart';
 import 'procedure.dart';
 
 class ProcedureService {
   final ProcedureRepository _procedureRepository;
-  final SecureStorageService _secureStorage;
-  static const _uuid = Uuid();
 
-  ProcedureService(this._procedureRepository, this._secureStorage);
-
-  Future<String> _getRequiredSession() async {
-    final dentistId = await _secureStorage.getSession();
-    if (dentistId == null) {
-      throw Exception(
-        'Sessão profissional não encontrada. Faça login novamente.',
-      );
-    }
-    return dentistId;
-  }
+  ProcedureService(this._procedureRepository);
 
   Future<Procedure> createProcedure({
     required String patientId,
-    required String type,
+    required String description,
     required DateTime date,
     String? tooth,
-    String? observations,
-    required String status,
-    double? cost,
+    String? notes,
   }) async {
-    await _getRequiredSession();
-
-    final id = _uuid.v4();
     final procedure = Procedure(
-      id: id,
+      id: '', // Backend will assign
       patientId: patientId,
-      type: type,
       date: date,
+      description: description,
       tooth: tooth,
-      observations: observations,
-      status: status,
-      cost: cost,
-      createdAt: DateTime.now(),
+      notes: notes,
     );
-
-    await _procedureRepository.createProcedure(procedure);
-    return procedure;
+    return await _procedureRepository.createProcedure(patientId, procedure);
   }
 
   Future<Procedure> updateProcedure({
     required String id,
     required String patientId,
-    required String type,
+    required String description,
     required DateTime date,
     String? tooth,
-    String? observations,
-    required String status,
-    double? cost,
+    String? notes,
   }) async {
-    await _getRequiredSession();
-
-    final original = await _procedureRepository.getProcedureById(id);
-    if (original == null) {
-      throw Exception('Procedimento não encontrado.');
-    }
-
-    final updated = original.copyWith(
-      type: type,
+    final procedure = Procedure(
+      id: id,
+      patientId: patientId,
       date: date,
+      description: description,
       tooth: tooth,
-      observations: observations,
-      status: status,
-      cost: cost,
+      notes: notes,
     );
-
-    await _procedureRepository.updateProcedure(updated);
-    return updated;
+    return await _procedureRepository.updateProcedure(procedure);
   }
 
   Future<void> deleteProcedure(String id) async {
-    await _getRequiredSession();
     await _procedureRepository.deleteProcedure(id);
   }
 
-  Future<Procedure?> getProcedure(String id) async {
-    await _getRequiredSession();
-    return await _procedureRepository.getProcedureById(id);
-  }
-
   Future<List<Procedure>> getProceduresForPatient(String patientId) async {
-    await _getRequiredSession();
     return await _procedureRepository.getProceduresForPatient(patientId);
   }
 }
+
+// Provider for ProcedureService
+final procedureServiceProvider = Provider<ProcedureService>((ref) {
+  final repository = ref.watch(procedureRepositoryProvider);
+  return ProcedureService(repository);
+});

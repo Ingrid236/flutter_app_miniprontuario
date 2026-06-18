@@ -19,8 +19,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
   final _cpfController = TextEditingController();
   final _phoneController = TextEditingController();
   final _allergiesController = TextEditingController();
-  final _medicationsController = TextEditingController();
-  final _chronicDiseasesController = TextEditingController();
+  final _systemicDiseasesController = TextEditingController();
 
   DateTime? _selectedBirthDate;
   bool _isInitialized = false;
@@ -33,8 +32,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
     _cpfController.dispose();
     _phoneController.dispose();
     _allergiesController.dispose();
-    _medicationsController.dispose();
-    _chronicDiseasesController.dispose();
+    _systemicDiseasesController.dispose();
     super.dispose();
   }
 
@@ -42,11 +40,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
     if (_isInitialized) return;
     _nameController.text = patient.name;
     _cpfController.text = patient.cpf;
-    _phoneController.text = patient.phone;
+    _phoneController.text = patient.phone ?? '';
     _selectedBirthDate = patient.birthDate;
     _allergiesController.text = patient.allergies ?? '';
-    _medicationsController.text = patient.medications ?? '';
-    _chronicDiseasesController.text = patient.chronicDiseases ?? '';
+    _systemicDiseasesController.text = patient.systemicDiseases ?? '';
     _isInitialized = true;
   }
 
@@ -102,32 +99,30 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         name: _nameController.text.trim(),
         birthDate: _selectedBirthDate!,
         cpf: _cpfController.text.trim(),
-        phone: _phoneController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
         allergies: _allergiesController.text.trim().isEmpty
             ? null
             : _allergiesController.text.trim(),
-        medications: _medicationsController.text.trim().isEmpty
+        systemicDiseases: _systemicDiseasesController.text.trim().isEmpty
             ? null
-            : _medicationsController.text.trim(),
-        chronicDiseases: _chronicDiseasesController.text.trim().isEmpty
-            ? null
-            : _chronicDiseasesController.text.trim(),
+            : _systemicDiseasesController.text.trim(),
       );
     } else {
       success = await controller.createPatient(
         name: _nameController.text.trim(),
         birthDate: _selectedBirthDate!,
         cpf: _cpfController.text.trim(),
-        phone: _phoneController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
         allergies: _allergiesController.text.trim().isEmpty
             ? null
             : _allergiesController.text.trim(),
-        medications: _medicationsController.text.trim().isEmpty
+        systemicDiseases: _systemicDiseasesController.text.trim().isEmpty
             ? null
-            : _medicationsController.text.trim(),
-        chronicDiseases: _chronicDiseasesController.text.trim().isEmpty
-            ? null
-            : _chronicDiseasesController.text.trim(),
+            : _systemicDiseasesController.text.trim(),
       );
     }
 
@@ -392,20 +387,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Medications
-                    _buildLabel('Medicamentos em Uso'),
+                    // Systemic Diseases
+                    _buildLabel('Doenças Sistêmicas'),
                     _buildTextField(
-                      controller: _medicationsController,
-                      hint: 'E.g. Anticoagulantes, Anti-hipertensivos',
-                      icon: Icons.medication_liquid_outlined,
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Chronic Diseases
-                    _buildLabel('Doenças Crônicas'),
-                    _buildTextField(
-                      controller: _chronicDiseasesController,
+                      controller: _systemicDiseasesController,
                       hint: 'E.g. Diabetes, Hipertensão, Hemofilia',
                       icon: Icons.healing_outlined,
                       maxLines: 2,

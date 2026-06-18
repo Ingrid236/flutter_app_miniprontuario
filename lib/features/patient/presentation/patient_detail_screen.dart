@@ -148,9 +148,9 @@ class PatientDetailScreen extends ConsumerWidget {
                         'CPF: ${patient.cpf}',
                       ),
                       const SizedBox(height: 8),
-                      _buildInfoRow(
+                       _buildInfoRow(
                         Icons.phone_outlined,
-                        'Telefone: ${patient.phone}',
+                        'Telefone: ${patient.phone ?? 'Não informado'}',
                       ),
                     ],
                   ),
@@ -179,23 +179,13 @@ class PatientDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Medications Card (Amber/Orange alert)
+                // Systemic Diseases Card (Blue/Teal alert)
                 _buildAlertCard(
-                  title: 'Medicamentos em Uso',
-                  content: patient.medications,
-                  icon: Icons.medication_liquid_outlined,
-                  color: Colors.orangeAccent,
-                  emptyText: 'Nenhum medicamento de uso contínuo informado.',
-                ),
-                const SizedBox(height: 12),
-
-                // Chronic Diseases Card (Blue/Teal alert)
-                _buildAlertCard(
-                  title: 'Doenças Crônicas',
-                  content: patient.chronicDiseases,
+                  title: 'Doenças Sistêmicas',
+                  content: patient.systemicDiseases,
                   icon: Icons.healing_outlined,
                   color: const Color(0xFF3B82F6),
-                  emptyText: 'Nenhuma doença crônica relatada.',
+                  emptyText: 'Nenhuma doença sistêmica relatada.',
                 ),
 
                 const SizedBox(height: 24),
@@ -204,14 +194,17 @@ class PatientDetailScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Histórico de Procedimentos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    const Flexible(
+                      child: Text(
+                        'Histórico de Procedimentos',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: () =>
                           context.push('/patients/$patientId/procedures/new'),

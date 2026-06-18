@@ -1,3 +1,5 @@
+rootProject.name = "flutter_app_miniprontuario"
+
 pluginManagement {
     val flutterSdkPath =
         run {
