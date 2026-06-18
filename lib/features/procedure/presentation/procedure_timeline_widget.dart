@@ -143,7 +143,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                               Expanded(
                                 child: Text(
                                   procedure.description,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Theme.of(context).colorScheme.onSurface,
@@ -158,6 +158,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                           Row(
                             children: [
                               _buildMetaItem(
+                                context,
                                 Icons.calendar_month_outlined,
                                 _formatDate(procedure.date),
                               ),
@@ -166,28 +167,9 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                 const SizedBox(width: 12),
                                 _buildMetaItem(
                                   context,
-                                  Icons.calendar_month_outlined,
-                                  _formatDate(procedure.date),
+                                  Icons.tag,
+                                  'Dente ${procedure.tooth}',
                                 ),
-                                if (procedure.tooth != null &&
-                                    procedure.tooth!.trim().isNotEmpty) ...[
-                                  const SizedBox(width: 12),
-                                  _buildMetaItem(
-                                    context,
-                                    Icons.tag,
-                                    'Dente ${procedure.tooth}',
-                                  ),
-                                ],
-                                if (procedure.cost != null) ...[
-                                  const SizedBox(width: 12),
-                                  _buildMetaItem(
-                                    context,
-                                    Icons.payments_outlined,
-                                    NumberFormat.simpleCurrency(
-                                      locale: Localizations.maybeLocaleOf(context)?.toString() ?? 'pt_BR',
-                                    ).format(procedure.cost),
-                                  ),
-                                ],
                               ],
                             ],
                           ),
@@ -205,7 +187,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                               ),
                               child: Text(
                                 procedure.notes!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),

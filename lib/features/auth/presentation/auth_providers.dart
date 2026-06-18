@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/secure_storage_service.dart';
+import '../../patient/presentation/patient_providers.dart';
 import '../domain/auth_service.dart';
 import '../domain/dentist.dart';
 

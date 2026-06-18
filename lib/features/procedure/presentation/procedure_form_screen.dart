@@ -428,7 +428,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Notas Clínicas (Opcional)',
                       style: TextStyle(
                         fontSize: 16,
@@ -521,6 +521,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
     required IconData icon,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
+    TextInputAction? textInputAction,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     Widget? suffixIcon,

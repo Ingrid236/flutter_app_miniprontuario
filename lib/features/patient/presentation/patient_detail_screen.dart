@@ -150,7 +150,8 @@ class PatientDetailScreen extends ConsumerWidget {
                         'CPF: ${patient.cpf}',
                       ),
                       const SizedBox(height: 8),
-                       _buildInfoRow(
+                      _buildInfoRow(
+                        context,
                         Icons.phone_outlined,
                         'Telefone: ${patient.phone ?? 'Não informado'}',
                       ),
@@ -184,6 +185,7 @@ class PatientDetailScreen extends ConsumerWidget {
 
                 // Systemic Diseases Card (Blue/Teal alert)
                 _buildAlertCard(
+                  context: context,
                   title: 'Doenças Sistêmicas',
                   content: patient.systemicDiseases,
                   icon: Icons.healing_outlined,
@@ -306,8 +308,8 @@ class PatientDetailScreen extends ConsumerWidget {
                       onPressed: () =>
                           context.push('/patients/$patientId/procedures/new'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF06B6D4),
-                        foregroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -316,28 +318,13 @@ class PatientDetailScreen extends ConsumerWidget {
                           vertical: 10,
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            context.push('/patients/$patientId/procedures/new'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                        ),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text(
-                          'Adicionar',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text(
+                        'Adicionar',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 16),

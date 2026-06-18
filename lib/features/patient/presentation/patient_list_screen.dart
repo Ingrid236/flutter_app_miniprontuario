@@ -122,7 +122,7 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'CRO: ${dentist.cro ?? 'N/A'}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
@@ -336,19 +336,13 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                                     size: 14,
                                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                const Icon(
-                                  Icons.phone_outlined,
-                                  size: 14,
-                                  color: Color(0xFF64748B),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                   patient.phone ?? 'Não informado',
-                                  style: const TextStyle(
-                                    color: Color(0xFF94A3B8),
-                                    fontSize: 13,
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    patient.cpf,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                   const SizedBox(width: 16),
                                   Icon(
@@ -358,7 +352,7 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    patient.phone,
+                                    patient.phone ?? 'Não informado',
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       fontSize: 13,

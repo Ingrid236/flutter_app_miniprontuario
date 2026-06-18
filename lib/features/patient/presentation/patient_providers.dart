@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/network/api_client.dart';
 import '../domain/patient.dart';
 import '../domain/patient_service.dart';
 
@@ -48,8 +49,8 @@ final patientDetailProvider = FutureProvider.family
 final patientAiAnalysisProvider = FutureProvider.family
     .autoDispose<String, String>((ref, id) async {
       final apiClient = ref.watch(apiClientProvider);
-      final response = await apiClient.dio.post('/ai/analyze-patient/$id');
-      return response.data['analysis'] as String;
+      final response = await apiClient.post('/ai/analyze-patient/$id', {});
+      return response['analysis'] as String;
     });
 
 // Controller notifier for creating, updating, and deleting patients
