@@ -44,6 +44,14 @@ final patientDetailProvider = FutureProvider.family
       return await service.getPatient(id);
     });
 
+// Global provider for the AI generated clinical risk report
+final patientAiAnalysisProvider = FutureProvider.family
+    .autoDispose<String, String>((ref, id) async {
+      final apiClient = ref.watch(apiClientProvider);
+      final response = await apiClient.dio.post('/ai/analyze-patient/$id');
+      return response.data['analysis'] as String;
+    });
+
 // Controller notifier for creating, updating, and deleting patients
 class PatientController extends Notifier<AsyncValue<void>> {
   @override

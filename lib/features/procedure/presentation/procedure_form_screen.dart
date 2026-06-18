@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:record/record.dart';
@@ -141,18 +142,6 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF06B6D4),
-              onPrimary: Colors.white,
-              surface: Color(0xFF1E293B),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -238,12 +227,10 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
           ).firstOrNull;
           if (procedure == null) {
             return Scaffold(
-              backgroundColor: const Color(0xFF0F172A),
               appBar: AppBar(title: const Text('Editar Procedimento')),
               body: const Center(
                 child: Text(
                   'Procedimento não encontrado.',
-                  style: TextStyle(color: Colors.white),
                 ),
               ),
             );
@@ -263,7 +250,6 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
           body: Center(child: CircularProgressIndicator()),
         ),
         error: (err, _) => Scaffold(
-          backgroundColor: const Color(0xFF0F172A),
           body: Center(
             child: Text(
               'Erro ao carregar dados: $err',
@@ -289,7 +275,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
           _isEditMode ? 'Editar Procedimento' : 'Registrar Procedimento',
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => context.pop(),
         ),
       ),
@@ -304,7 +290,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: const Color(0xFF334155).withValues(alpha: 0.5),
@@ -313,12 +299,12 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Detalhes da Intervenção',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF06B6D4),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -356,14 +342,14 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                                     vertical: 16,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF0F172A),
+                                    color: Theme.of(context).scaffoldBackgroundColor,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.calendar_month_outlined,
-                                        color: Color(0xFF64748B),
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                                         size: 20,
                                       ),
                                       const SizedBox(width: 10),
@@ -372,8 +358,8 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                                           _selectedDate == null
                                               ? 'DD/MM/AAAA'
                                               : _formatDate(_selectedDate),
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.onSurface,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -396,6 +382,27 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                                 hint: 'Ex. 18, 36',
                                 icon: Icons.tag,
                                 keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                validator: (value) {
+                                  if (value != null && value.trim().isNotEmpty) {
+                                    final toothNum = int.tryParse(value.trim());
+                                    if (toothNum == null) {
+                                      return 'Dente inválido. A identificação do dente deve ser um número inteiro. Por favor, insira apenas números (ex. 18, 36).';
+                                    }
+                                    final isValidPermanent = (toothNum >= 11 && toothNum <= 18) ||
+                                                             (toothNum >= 21 && toothNum <= 28) ||
+                                                             (toothNum >= 31 && toothNum <= 38) ||
+                                                             (toothNum >= 41 && toothNum <= 48);
+                                    final isValidDeciduous = (toothNum >= 51 && toothNum <= 55) ||
+                                                             (toothNum >= 61 && toothNum <= 65) ||
+                                                             (toothNum >= 71 && toothNum <= 75) ||
+                                                             (toothNum >= 81 && toothNum <= 85);
+                                    if (!isValidPermanent && !isValidDeciduous) {
+                                      return 'Número de dente inválido. A numeração deve seguir o padrão FDI (11-48 para permanentes, 51-85 para decíduos). Por favor, corrija para um dente existente.';
+                                    }
+                                  }
+                                  return null;
+                                },
                               ),
                             ],
                           ),
@@ -412,7 +419,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: const Color(0xFF334155).withValues(alpha: 0.5),
@@ -426,7 +433,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF06B6D4),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -467,16 +474,16 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  backgroundColor: const Color(0xFF06B6D4),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
                 child: isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       )
                     : const Text(
@@ -499,8 +506,8 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Color(0xFFCBD5E1),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
           fontSize: 14,
         ),
@@ -514,6 +521,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
     required IconData icon,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     Widget? suffixIcon,
   }) {
@@ -521,10 +529,12 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      inputFormatters: inputFormatters,
+      textInputAction: textInputAction,
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFF64748B)),
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         filled: true,
         fillColor: const Color(0xFF0F172A),
         prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
@@ -539,7 +549,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF06B6D4), width: 1.5),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
         ),
       ),
       validator: validator,

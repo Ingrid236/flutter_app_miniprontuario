@@ -77,7 +77,6 @@ class RemoteAuthRepository implements AuthRepository {
   }
 }
 
-// Provider for AuthRepository
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final api = ref.watch(apiClientProvider);
   final storage = ref.watch(secureStorageProvider);

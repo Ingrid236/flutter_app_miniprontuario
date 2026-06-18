@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/formatters.dart';
 import '../domain/patient.dart';
 import 'patient_providers.dart';
 
@@ -20,6 +22,9 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
   final _phoneController = TextEditingController();
   final _allergiesController = TextEditingController();
   final _systemicDiseasesController = TextEditingController();
+
+  final _cpfFormatter = AppFormatters.cpfFormatter;
+  final _phoneFormatter = AppFormatters.phoneFormatter;
 
   DateTime? _selectedBirthDate;
   bool _isInitialized = false;
@@ -164,12 +169,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         data: (patient) {
           if (patient == null) {
             return Scaffold(
-              backgroundColor: const Color(0xFF0F172A),
               appBar: AppBar(title: const Text('Editar Paciente')),
               body: const Center(
                 child: Text(
                   'Paciente não encontrado.',
-                  style: TextStyle(color: Colors.white),
                 ),
               ),
             );
@@ -178,11 +181,9 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
           return _buildFormScaffold(isLoading);
         },
         loading: () => const Scaffold(
-          backgroundColor: const Color(0xFF0F172A),
           body: Center(child: CircularProgressIndicator()),
         ),
         error: (err, _) => Scaffold(
-          backgroundColor: const Color(0xFF0F172A),
           body: Center(
             child: Text(
               'Erro ao carregar dados: $err',
@@ -198,13 +199,12 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
 
   Widget _buildFormScaffold(bool isLoading) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Slate 900
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(_isEditMode ? 'Editar Paciente' : 'Cadastrar Paciente'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => context.pop(),
         ),
       ),
@@ -219,21 +219,21 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF334155).withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Informações Pessoais',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF06B6D4),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -244,9 +244,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       controller: _nameController,
                       hint: 'Nome do Paciente',
                       icon: Icons.person_outline,
+                      textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Insira o nome do paciente';
+                          return 'Nome do paciente ausente. O nome é obrigatório para identificação no prontuário. Por favor, insira o nome completo do paciente.';
                         }
                         return null;
                       },
@@ -267,16 +268,15 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                                 hint: '000.000.000-00',
                                 icon: Icons.badge_outlined,
                                 keyboardType: TextInputType.number,
+                                inputFormatters: [_cpfFormatter],
+                                textInputAction: TextInputAction.next,
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'CPF obrigatório';
+                                    return 'CPF ausente. O CPF é obrigatório para faturamento e identificação única. Por favor, insira o CPF completo do paciente.';
                                   }
-                                  final cleanCpf = value.replaceAll(
-                                    RegExp(r'[^0-9]'),
-                                    '',
-                                  );
+                                  final cleanCpf = value.replaceAll(RegExp(r'[^0-9]'), '');
                                   if (cleanCpf.length != 11) {
-                                    return 'CPF inválido';
+                                    return 'CPF incompleto. O CPF do paciente deve conter exatamente 11 dígitos numéricos. Por favor, preencha o CPF por completo (000.000.000-00).';
                                   }
                                   return null;
                                 },
@@ -298,14 +298,14 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                                     vertical: 16,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF0F172A),
+                                    color: Theme.of(context).scaffoldBackgroundColor,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.calendar_month_outlined,
-                                        color: Color(0xFF64748B),
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                                         size: 20,
                                       ),
                                       const SizedBox(width: 10),
@@ -316,8 +316,8 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                                               : _formatDate(_selectedBirthDate),
                                           style: TextStyle(
                                             color: _selectedBirthDate == null
-                                                ? const Color(0xFF64748B)
-                                                : Colors.white,
+                                                ? Theme.of(context).colorScheme.onSurfaceVariant
+                                                : Theme.of(context).colorScheme.onSurface,
                                             fontSize: 14,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -341,9 +341,23 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       hint: '(00) 90000-0000',
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [_phoneFormatter],
+                      textInputAction: TextInputAction.next,
+                      onChanged: (value) {
+                        final clean = value.replaceAll(RegExp(r'[^0-9]'), '');
+                        if (clean.length <= 10) {
+                          _phoneFormatter.updateMask(mask: '(##) ####-####');
+                        } else {
+                          _phoneFormatter.updateMask(mask: '(##) #####-####');
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Insira o telefone do paciente';
+                          return 'Telefone ausente. O telefone é necessário para comunicação com o paciente. Por favor, insira o número de telefone com DDD.';
+                        }
+                        final cleanPhone = value.replaceAll(RegExp(r'[^0-9]'), '');
+                        if (cleanPhone.length < 10) {
+                          return 'Telefone incompleto. O número inserido é curto demais. Por favor, insira o DDD + 8 ou 9 dígitos.';
                         }
                         return null;
                       },
@@ -358,21 +372,21 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF334155).withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Histórico Clínico (Opcional)',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF06B6D4),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -384,6 +398,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       hint: 'E.g. Penicilina, Corantes, ANESTÉSICOS',
                       icon: Icons.warning_amber_outlined,
                       maxLines: 2,
+                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
 
@@ -394,6 +409,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       hint: 'E.g. Diabetes, Hipertensão, Hemofilia',
                       icon: Icons.healing_outlined,
                       maxLines: 2,
+                      textInputAction: TextInputAction.done,
                     ),
                   ],
                 ),
@@ -409,16 +425,16 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  backgroundColor: const Color(0xFF06B6D4),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
                 child: isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       )
                     : const Text(
@@ -441,8 +457,8 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Color(0xFFCBD5E1),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w600,
           fontSize: 14,
         ),
@@ -456,19 +472,25 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
     required IconData icon,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    void Function(String)? onChanged,
     String? Function(String?)? validator,
+    TextInputAction? textInputAction,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      inputFormatters: inputFormatters,
+      onChanged: onChanged,
+      textInputAction: textInputAction,
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFF64748B)),
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         filled: true,
-        fillColor: const Color(0xFF0F172A),
-        prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
+        fillColor: Theme.of(context).scaffoldBackgroundColor,
+        prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 16,
           horizontal: 16,
@@ -479,7 +501,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF06B6D4), width: 1.5),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
         ),
       ),
       validator: validator,

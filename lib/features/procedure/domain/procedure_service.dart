@@ -7,6 +7,13 @@ class ProcedureService {
 
   ProcedureService(this._procedureRepository);
 
+  Future<void> _validatePatientOwnership(String dentistId, String patientId) async {
+    final patient = await _patientRepository.getPatientById(patientId);
+    if (patient == null || patient.dentistId != dentistId) {
+      throw Exception('Acesso negado: o paciente informado não pertence ao seu prontuário ou não existe.');
+    }
+  }
+
   Future<Procedure> createProcedure({
     required String patientId,
     required String description,

@@ -7,7 +7,7 @@ class Dentist {
   final String? cro;
   final String? phone;
 
-  const Dentist({
+  Dentist({
     required this.id,
     required this.name,
     required this.email,

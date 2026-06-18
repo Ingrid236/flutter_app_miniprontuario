@@ -49,7 +49,6 @@ class RemoteProcedureRepository implements ProcedureRepository {
   }
 }
 
-// Provider for ProcedureRepository
 final procedureRepositoryProvider = Provider<ProcedureRepository>((ref) {
   final api = ref.watch(apiClientProvider);
   return RemoteProcedureRepository(api);

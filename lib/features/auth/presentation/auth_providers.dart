@@ -105,6 +105,7 @@ class AuthController extends Notifier<AsyncValue<void>> {
       final authService = ref.read(authServiceProvider);
       await authService.logout();
       ref.read(activeDentistIdProvider.notifier).setSession(null);
+      ref.invalidate(patientsListProvider);
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

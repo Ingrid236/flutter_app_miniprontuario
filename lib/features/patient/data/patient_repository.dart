@@ -69,7 +69,6 @@ class RemotePatientRepository implements PatientRepository {
   }
 }
 
-// Provider for PatientRepository
 final patientRepositoryProvider = Provider<PatientRepository>((ref) {
   final api = ref.watch(apiClientProvider);
   return RemotePatientRepository(api);
