@@ -368,15 +368,15 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                       _buildLabel('Senha'),
                       _buildTextField(
                         controller: _passwordController,
-                        hint: 'Mínimo 6 caracteres',
+                        hint: 'Mínimo 8 caracteres',
                         icon: Icons.lock_outline,
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Senha ausente. Uma senha é obrigatória para proteger seu acesso. Por favor, crie uma senha.';
                           }
-                          if (value.length < 6) {
-                            return 'Senha fraca. A senha deve possuir pelo menos 6 caracteres. Por favor, digite uma senha mais longa.';
+                          if (value.length < 8) {
+                            return 'Senha fraca. A senha deve possuir pelo menos 8 caracteres. Por favor, digite uma senha mais longa.';
                           }
                           return null;
                         },

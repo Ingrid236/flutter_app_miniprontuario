@@ -59,8 +59,8 @@ class RemoteAuthRepository implements AuthRepository {
 
     // Persist tokens
     await _storage.saveTokens(
-      accessToken: data['token'] as String,
-      refreshToken: '', // Backend only returns 'token', no refresh token
+      accessToken: data['accessToken'] as String,
+      refreshToken: data['refreshToken'] as String? ?? '', 
     );
 
     // Cache dentist ID from login response
