@@ -22,6 +22,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
   final _phoneController = TextEditingController();
   final _allergiesController = TextEditingController();
   final _systemicDiseasesController = TextEditingController();
+  final _medicationsController = TextEditingController();
 
   final _cpfFormatter = AppFormatters.cpfFormatter;
   final _phoneFormatter = AppFormatters.phoneFormatter;
@@ -38,6 +39,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
     _phoneController.dispose();
     _allergiesController.dispose();
     _systemicDiseasesController.dispose();
+    _medicationsController.dispose();
     super.dispose();
   }
 
@@ -49,6 +51,7 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
     _selectedBirthDate = patient.birthDate;
     _allergiesController.text = patient.allergies ?? '';
     _systemicDiseasesController.text = patient.systemicDiseases ?? '';
+    _medicationsController.text = patient.medications ?? '';
     _isInitialized = true;
   }
 
@@ -113,6 +116,9 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         systemicDiseases: _systemicDiseasesController.text.trim().isEmpty
             ? null
             : _systemicDiseasesController.text.trim(),
+        medications: _medicationsController.text.trim().isEmpty
+            ? null
+            : _medicationsController.text.trim(),
       );
     } else {
       success = await controller.createPatient(
@@ -128,6 +134,9 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         systemicDiseases: _systemicDiseasesController.text.trim().isEmpty
             ? null
             : _systemicDiseasesController.text.trim(),
+        medications: _medicationsController.text.trim().isEmpty
+            ? null
+            : _medicationsController.text.trim(),
       );
     }
 
@@ -408,6 +417,17 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                       controller: _systemicDiseasesController,
                       hint: 'E.g. Diabetes, Hipertensão, Hemofilia',
                       icon: Icons.healing_outlined,
+                      maxLines: 2,
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Medications
+                    _buildLabel('Medicamentos em Uso'),
+                    _buildTextField(
+                      controller: _medicationsController,
+                      hint: 'E.g. AAS, Anticoagulantes, Insulina',
+                      icon: Icons.medication_outlined,
                       maxLines: 2,
                       textInputAction: TextInputAction.done,
                     ),

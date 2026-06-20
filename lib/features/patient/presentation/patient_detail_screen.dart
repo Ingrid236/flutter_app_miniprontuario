@@ -192,6 +192,17 @@ class PatientDetailScreen extends ConsumerWidget {
                   color: const Color(0xFF3B82F6),
                   emptyText: 'Nenhuma doença sistêmica relatada.',
                 ),
+                const SizedBox(height: 12),
+
+                // Medications Card (Green alert)
+                _buildAlertCard(
+                  context: context,
+                  title: 'Medicamentos em Uso',
+                  content: patient.medications,
+                  icon: Icons.medication_outlined,
+                  color: const Color(0xFF10B981),
+                  emptyText: 'Nenhum medicamento relatado.',
+                ),
 
                 const SizedBox(height: 20),
 
@@ -207,6 +218,79 @@ class PatientDetailScreen extends ConsumerWidget {
 
                 Consumer(
                   builder: (context, ref, child) {
+                    final consentMap = ref.watch(aiConsentProvider);
+                    final isConsented = consentMap[patientId] ?? false;
+                    if (!isConsented) {
+                      return Container(
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.lock_outline_rounded,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Consentimento de Processamento de Dados',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Para gerar a análise de risco clínico por Inteligência Artificial, é necessário enviar as informações de anamnese do paciente para processamento externo na nuvem. Confirme o consentimento profissional para continuar.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                height: 1.4,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  ref.read(aiConsentProvider.notifier).consent(patientId);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.psychology_outlined, size: 20),
+                                label: const Text(
+                                  'Gerar Relatório de Risco Clínico com IA',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
                     final aiState = ref.watch(patientAiAnalysisProvider(patientId));
                     return aiState.when(
                       data: (analysis) => Container(

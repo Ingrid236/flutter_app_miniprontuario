@@ -14,6 +14,7 @@ class PatientService {
     String? phone,
     String? allergies,
     String? systemicDiseases,
+    String? medications,
   }) async {
     final patient = Patient(
       id: '', // Backend will assign ID
@@ -23,6 +24,7 @@ class PatientService {
       phone: phone,
       allergies: allergies,
       systemicDiseases: systemicDiseases,
+      medications: medications,
     );
     return await _patientRepository.createPatient(patient);
   }
@@ -35,6 +37,7 @@ class PatientService {
     String? phone,
     String? allergies,
     String? systemicDiseases,
+    String? medications,
   }) async {
     final patient = Patient(
       id: id,
@@ -44,6 +47,7 @@ class PatientService {
       phone: phone,
       allergies: allergies,
       systemicDiseases: systemicDiseases,
+      medications: medications,
     );
     return await _patientRepository.updatePatient(patient);
   }

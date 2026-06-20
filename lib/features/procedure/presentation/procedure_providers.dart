@@ -20,6 +20,8 @@ class ProcedureController extends Notifier<AsyncValue<void>> {
     required String patientId,
     required String description,
     required DateTime date,
+    required String status,
+    double? cost,
     String? tooth,
     String? notes,
   }) async {
@@ -30,6 +32,8 @@ class ProcedureController extends Notifier<AsyncValue<void>> {
         patientId: patientId,
         description: description,
         date: date,
+        status: status,
+        cost: cost,
         tooth: tooth,
         notes: notes,
       );
@@ -47,6 +51,8 @@ class ProcedureController extends Notifier<AsyncValue<void>> {
     required String patientId,
     required String description,
     required DateTime date,
+    required String status,
+    double? cost,
     String? tooth,
     String? notes,
   }) async {
@@ -58,6 +64,8 @@ class ProcedureController extends Notifier<AsyncValue<void>> {
         patientId: patientId,
         description: description,
         date: date,
+        status: status,
+        cost: cost,
         tooth: tooth,
         notes: notes,
       );

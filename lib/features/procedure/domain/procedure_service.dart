@@ -12,6 +12,8 @@ class ProcedureService {
     required String patientId,
     required String description,
     required DateTime date,
+    required String status,
+    double? cost,
     String? tooth,
     String? notes,
   }) async {
@@ -20,6 +22,8 @@ class ProcedureService {
       patientId: patientId,
       date: date,
       description: description,
+      status: status,
+      cost: cost,
       tooth: tooth,
       notes: notes,
     );
@@ -31,6 +35,8 @@ class ProcedureService {
     required String patientId,
     required String description,
     required DateTime date,
+    required String status,
+    double? cost,
     String? tooth,
     String? notes,
   }) async {
@@ -39,6 +45,8 @@ class ProcedureService {
       patientId: patientId,
       date: date,
       description: description,
+      status: status,
+      cost: cost,
       tooth: tooth,
       notes: notes,
     );

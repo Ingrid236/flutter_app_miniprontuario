@@ -67,6 +67,7 @@ class PatientController extends Notifier<AsyncValue<void>> {
     String? phone,
     String? allergies,
     String? systemicDiseases,
+    String? medications,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -78,6 +79,7 @@ class PatientController extends Notifier<AsyncValue<void>> {
         phone: phone,
         allergies: allergies,
         systemicDiseases: systemicDiseases,
+        medications: medications,
       );
       ref.invalidate(patientsListProvider);
       state = const AsyncValue.data(null);
@@ -96,6 +98,7 @@ class PatientController extends Notifier<AsyncValue<void>> {
     String? phone,
     String? allergies,
     String? systemicDiseases,
+    String? medications,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -108,6 +111,7 @@ class PatientController extends Notifier<AsyncValue<void>> {
         phone: phone,
         allergies: allergies,
         systemicDiseases: systemicDiseases,
+        medications: medications,
       );
       ref.invalidate(patientsListProvider);
       ref.invalidate(patientDetailProvider(id));
@@ -138,6 +142,26 @@ class PatientController extends Notifier<AsyncValue<void>> {
 final patientControllerProvider =
     NotifierProvider<PatientController, AsyncValue<void>>(() {
       return PatientController();
+    });
+
+// Notifier to track whether the user has consented and requested the AI risk analysis for patients.
+class AiConsentNotifier extends Notifier<Map<String, bool>> {
+  @override
+  Map<String, bool> build() {
+    return const {};
+  }
+
+  void consent(String patientId) {
+    state = {
+      ...state,
+      patientId: true,
+    };
+  }
+}
+
+final aiConsentProvider =
+    NotifierProvider<AiConsentNotifier, Map<String, bool>>(() {
+      return AiConsentNotifier();
     });
 
 

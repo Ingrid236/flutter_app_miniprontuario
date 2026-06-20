@@ -7,6 +7,7 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../core/network/ia_service.dart';
+import '../domain/procedure.dart';
 import 'procedure_providers.dart';
 
 class ProcedureFormScreen extends ConsumerStatefulWidget {
@@ -29,9 +30,11 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
   final _descriptionController = TextEditingController();
   final _toothController = TextEditingController();
   final _notesController = TextEditingController();
+  final _costController = TextEditingController();
   final AudioRecorder _audioRecorder = AudioRecorder();
 
   DateTime? _selectedDate;
+  String _selectedStatus = 'PLANNED';
   bool _isInitialized = false;
   bool _isRecording = false;
   bool _isTranscribing = false;
@@ -49,21 +52,19 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
     _descriptionController.dispose();
     _toothController.dispose();
     _notesController.dispose();
+    _costController.dispose();
     _audioRecorder.dispose();
     super.dispose();
   }
 
-  void _initializeFields(
-    String? description,
-    String? tooth,
-    String? notes,
-    DateTime? date,
-  ) {
+  void _initializeFields(Procedure procedure) {
     if (_isInitialized) return;
-    _descriptionController.text = description ?? '';
-    _toothController.text = tooth ?? '';
-    _notesController.text = notes ?? '';
-    _selectedDate = date ?? DateTime.now();
+    _descriptionController.text = procedure.description;
+    _toothController.text = procedure.tooth ?? '';
+    _notesController.text = procedure.notes ?? '';
+    _costController.text = procedure.cost != null ? procedure.cost.toString() : '';
+    _selectedStatus = procedure.status;
+    _selectedDate = procedure.date;
     _isInitialized = true;
   }
 
@@ -161,12 +162,17 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
     final controller = ref.read(procedureControllerProvider.notifier);
     bool success;
 
+    final costText = _costController.text.trim();
+    final cost = costText.isEmpty ? null : double.tryParse(costText);
+
     if (_isEditMode) {
       success = await controller.updateProcedure(
         id: widget.procedureId!,
         patientId: widget.patientId,
         description: _descriptionController.text.trim(),
         date: _selectedDate!,
+        status: _selectedStatus,
+        cost: cost,
         tooth: _toothController.text.trim().isEmpty
             ? null
             : _toothController.text.trim(),
@@ -179,6 +185,8 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
         patientId: widget.patientId,
         description: _descriptionController.text.trim(),
         date: _selectedDate!,
+        status: _selectedStatus,
+        cost: cost,
         tooth: _toothController.text.trim().isEmpty
             ? null
             : _toothController.text.trim(),
@@ -235,12 +243,7 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
               ),
             );
           }
-          _initializeFields(
-            procedure.description,
-            procedure.tooth,
-            procedure.notes,
-            procedure.date,
-          );
+          _initializeFields(procedure);
           final controllerState = ref.watch(procedureControllerProvider);
           final isLoading = controllerState is AsyncLoading;
           return _buildFormScaffold(isLoading);
@@ -403,6 +406,75 @@ class _ProcedureFormScreenState extends ConsumerState<ProcedureFormScreen> {
                                   }
                                   return null;
                                 },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildLabel(r'Custo (R$) (Opcional)'),
+                              _buildTextField(
+                                controller: _costController,
+                                hint: '0.00',
+                                icon: Icons.attach_money,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                textInputAction: TextInputAction.next,
+                                validator: (value) {
+                                  if (value != null && value.trim().isNotEmpty) {
+                                    if (double.tryParse(value.trim()) == null) {
+                                      return 'Custo inválido. Insira um valor numérico.';
+                                    }
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildLabel('Status'),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).scaffoldBackgroundColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedStatus,
+                                    dropdownColor: const Color(0xFF1E293B),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                                    onChanged: (newValue) {
+                                      if (newValue != null) {
+                                        setState(() {
+                                          _selectedStatus = newValue;
+                                        });
+                                      }
+                                    },
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: 'PLANNED',
+                                        child: Text('Planejado'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'COMPLETED',
+                                        child: Text('Concluído'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),

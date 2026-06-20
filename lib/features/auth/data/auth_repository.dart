@@ -20,6 +20,8 @@ abstract class AuthRepository {
   });
 
   Future<Dentist> getMe();
+
+  Future<void> logout(String refreshToken);
 }
 
 class RemoteAuthRepository implements AuthRepository {
@@ -74,6 +76,13 @@ class RemoteAuthRepository implements AuthRepository {
   Future<Dentist> getMe() async {
     final data = await _api.get(ApiConstants.me);
     return Dentist.fromJson(data);
+  }
+
+  @override
+  Future<void> logout(String refreshToken) async {
+    await _api.post(ApiConstants.logout, {
+      'refreshToken': refreshToken,
+    });
   }
 }
 

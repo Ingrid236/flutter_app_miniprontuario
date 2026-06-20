@@ -36,7 +36,16 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _secureStorage.clearTokens();
+    try {
+      final refreshToken = await _secureStorage.getRefreshToken();
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await _authRepository.logout(refreshToken);
+      }
+    } catch (_) {
+      // Ignore errors so local tokens are still cleared in case of network issues
+    } finally {
+      await _secureStorage.clearTokens();
+    }
   }
 
   Future<Dentist?> getCurrentDentist() async {

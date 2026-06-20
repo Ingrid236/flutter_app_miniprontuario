@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import '../domain/procedure.dart';
 import 'procedure_providers.dart';
 
@@ -105,7 +104,9 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                         width: 14,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981), // Always green now
+                          color: procedure.status == 'COMPLETED'
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF3B82F6),
                           shape: BoxShape.circle,
                           border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
                         ),
@@ -138,7 +139,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 child: Text(
@@ -150,11 +151,13 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              _buildStatusBadge(context, procedure.status),
                             ],
                           ),
                           const SizedBox(height: 10),
 
-                          // Date, Tooth
+                          // Date, Tooth, Cost
                           Row(
                             children: [
                               _buildMetaItem(
@@ -169,6 +172,14 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                   context,
                                   Icons.tag,
                                   'Dente ${procedure.tooth}',
+                                ),
+                              ],
+                              if (procedure.cost != null) ...[
+                                const SizedBox(width: 12),
+                                _buildMetaItem(
+                                  context,
+                                  Icons.attach_money,
+                                  'R\$ ${procedure.cost!.toStringAsFixed(2).replaceAll('.', ',')}',
                                 ),
                               ],
                             ],
@@ -270,6 +281,31 @@ class ProcedureTimelineWidget extends ConsumerWidget {
           style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context, String status) {
+    final isCompleted = status == 'COMPLETED';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isCompleted
+            ? const Color(0xFF10B981).withOpacity(0.1)
+            : const Color(0xFF3B82F6).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isCompleted ? const Color(0xFF10B981) : const Color(0xFF3B82F6),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        isCompleted ? 'Concluído' : 'Planejado',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: isCompleted ? const Color(0xFF10B981) : const Color(0xFF3B82F6),
+        ),
+      ),
     );
   }
 }

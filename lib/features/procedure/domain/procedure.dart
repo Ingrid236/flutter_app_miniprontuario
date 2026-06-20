@@ -13,6 +13,8 @@ class Procedure {
   final String patientId;
   final DateTime date;
   final String description;
+  final String status;
+  final double? cost;
   final String? tooth;
   final String? notes;
   final DateTime? createdAt;
@@ -23,6 +25,8 @@ class Procedure {
     required this.patientId,
     required this.date,
     required this.description,
+    this.status = 'PLANNED',
+    this.cost,
     this.tooth,
     this.notes,
     this.createdAt,
@@ -35,6 +39,8 @@ class Procedure {
       patientId: json['patientId'].toString(),
       date: DateTime.parse(json['date'] as String),
       description: json['description'] as String,
+      status: json['status'] as String? ?? 'PLANNED',
+      cost: json['cost'] != null ? (json['cost'] as num).toDouble() : null,
       tooth: json['tooth'] as String?,
       notes: json['notes'] as String?,
       createdAt: json['createdAt'] != null
@@ -52,6 +58,8 @@ class Procedure {
           '${date.month.toString().padLeft(2, '0')}-'
           '${date.day.toString().padLeft(2, '0')}',
       'description': description,
+      'status': status,
+      if (cost != null) 'cost': cost,
       if (tooth != null) 'tooth': tooth,
       if (notes != null) 'notes': notes,
     };
@@ -62,6 +70,8 @@ class Procedure {
     String? patientId,
     DateTime? date,
     String? description,
+    String? status,
+    double? cost,
     String? tooth,
     String? notes,
     DateTime? createdAt,
@@ -72,6 +82,8 @@ class Procedure {
       patientId: patientId ?? this.patientId,
       date: date ?? this.date,
       description: description ?? this.description,
+      status: status ?? this.status,
+      cost: cost ?? this.cost,
       tooth: tooth ?? this.tooth,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,

@@ -8,6 +8,7 @@ class Patient {
   final String? allergies;
   /// Maps to `systemicDiseases` in the backend (formerly `chronicDiseases`).
   final String? systemicDiseases;
+  final String? medications;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -19,6 +20,7 @@ class Patient {
     this.phone,
     this.allergies,
     this.systemicDiseases,
+    this.medications,
     this.createdAt,
     this.updatedAt,
   });
@@ -32,6 +34,7 @@ class Patient {
       phone: json['phone'] as String?,
       allergies: json['allergies'] as String?,
       systemicDiseases: json['systemicDiseases'] as String?,
+      medications: json['medications'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
@@ -51,6 +54,7 @@ class Patient {
       if (phone != null) 'phone': phone,
       if (allergies != null) 'allergies': allergies,
       if (systemicDiseases != null) 'systemicDiseases': systemicDiseases,
+      if (medications != null) 'medications': medications,
     };
   }
 
@@ -62,6 +66,7 @@ class Patient {
     String? phone,
     String? allergies,
     String? systemicDiseases,
+    String? medications,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -73,6 +78,7 @@ class Patient {
       phone: phone ?? this.phone,
       allergies: allergies ?? this.allergies,
       systemicDiseases: systemicDiseases ?? this.systemicDiseases,
+      medications: medications ?? this.medications,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
