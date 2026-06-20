@@ -179,19 +179,14 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
           if (patient == null) {
             return Scaffold(
               appBar: AppBar(title: const Text('Editar Paciente')),
-              body: const Center(
-                child: Text(
-                  'Paciente não encontrado.',
-                ),
-              ),
+              body: const Center(child: Text('Paciente não encontrado.')),
             );
           }
           _initializeFields(patient);
           return _buildFormScaffold(isLoading);
         },
-        loading: () => const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
+        loading: () =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
         error: (err, _) => Scaffold(
           body: Center(
             child: Text(
@@ -213,7 +208,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         elevation: 0,
         title: Text(_isEditMode ? 'Editar Paciente' : 'Cadastrar Paciente'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -283,7 +281,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                                   if (value == null || value.trim().isEmpty) {
                                     return 'CPF ausente. O CPF é obrigatório para faturamento e identificação única. Por favor, insira o CPF completo do paciente.';
                                   }
-                                  final cleanCpf = value.replaceAll(RegExp(r'[^0-9]'), '');
+                                  final cleanCpf = value.replaceAll(
+                                    RegExp(r'[^0-9]'),
+                                    '',
+                                  );
                                   if (cleanCpf.length != 11) {
                                     return 'CPF incompleto. O CPF do paciente deve conter exatamente 11 dígitos numéricos. Por favor, preencha o CPF por completo (000.000.000-00).';
                                   }
@@ -307,14 +308,18 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                                     vertical: 16,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).scaffoldBackgroundColor,
+                                    color: Theme.of(
+                                      context,
+                                    ).scaffoldBackgroundColor,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
                                     children: [
                                       Icon(
                                         Icons.calendar_month_outlined,
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                         size: 20,
                                       ),
                                       const SizedBox(width: 10),
@@ -325,8 +330,12 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                                               : _formatDate(_selectedBirthDate),
                                           style: TextStyle(
                                             color: _selectedBirthDate == null
-                                                ? Theme.of(context).colorScheme.onSurfaceVariant
-                                                : Theme.of(context).colorScheme.onSurface,
+                                                ? Theme.of(
+                                                    context,
+                                                  ).colorScheme.onSurfaceVariant
+                                                : Theme.of(
+                                                    context,
+                                                  ).colorScheme.onSurface,
                                             fontSize: 14,
                                           ),
                                           overflow: TextOverflow.ellipsis,
@@ -364,7 +373,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Telefone ausente. O telefone é necessário para comunicação com o paciente. Por favor, insira o número de telefone com DDD.';
                         }
-                        final cleanPhone = value.replaceAll(RegExp(r'[^0-9]'), '');
+                        final cleanPhone = value.replaceAll(
+                          RegExp(r'[^0-9]'),
+                          '',
+                        );
                         if (cleanPhone.length < 10) {
                           return 'Telefone incompleto. O número inserido é curto demais. Por favor, insira o DDD + 8 ou 9 dígitos.';
                         }
@@ -507,10 +519,15 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
       style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        hintStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         filled: true,
         fillColor: Theme.of(context).scaffoldBackgroundColor,
-        prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         contentPadding: const EdgeInsets.symmetric(
           vertical: 16,
           horizontal: 16,
@@ -521,7 +538,10 @@ class _PatientFormScreenState extends ConsumerState<PatientFormScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 1.5,
+          ),
         ),
       ),
       validator: validator,

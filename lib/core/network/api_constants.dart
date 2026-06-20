@@ -12,9 +12,14 @@ class ApiConstants {
       return 'http://localhost:8080';
     }
     try {
-      if (Platform.isAndroid || Platform.isIOS) {
-        // Usando o IP local da sua máquina na rede Wi-Fi para que funcione tanto no emulador quanto no celular físico
-        return 'http://192.168.1.16:8080';
+      if (Platform.isAndroid) {
+        // Se estiver no Emulador Android: usar 'http://10.0.2.2:8080'
+        // Se estiver em um celular físico: usar o IP atual do seu computador na rede (ex: 'http://10.219.115.126:8080')
+        // Ou rodar o comando 'adb reverse tcp:8080 tcp:8080' no seu terminal e usar 'http://localhost:8080'
+        return 'http://10.0.2.2:8080';
+      }
+      if (Platform.isIOS) {
+        return 'http://localhost:8080';
       }
     } catch (_) {}
     return 'http://localhost:8080';
