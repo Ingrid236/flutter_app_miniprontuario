@@ -52,7 +52,10 @@ class ApiException implements Exception {
       case DioExceptionType.cancel:
         return ApiException('A requisição foi cancelada.');
       default:
-        return ApiException('Ocorreu um erro desconhecido.');
+        final detail = error.message ?? error.error?.toString() ?? '';
+        return ApiException(detail.isNotEmpty 
+            ? 'Ocorreu um erro desconhecido: $detail' 
+            : 'Ocorreu um erro desconhecido.');
     }
   }
 }
