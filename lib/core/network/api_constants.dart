@@ -13,10 +13,9 @@ class ApiConstants {
     }
     try {
       if (Platform.isAndroid) {
-        // Se estiver no Emulador Android: usar 'http://10.0.2.2:8080'
-        // Se estiver em um celular físico: usar o IP atual do seu computador na rede (ex: 'http://10.219.115.126:8080')
-        // Ou rodar o comando 'adb reverse tcp:8080 tcp:8080' no seu terminal e usar 'http://localhost:8080'
-        return 'http://10.0.2.2:8080';
+        // Como ativamos o redirecionamento USB (adb reverse tcp:8080 tcp:8080),
+        // o celular físico e o emulador enxergam a API rodando no computador via localhost:8080.
+        return 'http://localhost:8080';
       }
       if (Platform.isIOS) {
         return 'http://localhost:8080';
