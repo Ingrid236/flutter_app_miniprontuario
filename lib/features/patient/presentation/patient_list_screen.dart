@@ -121,7 +121,7 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'CRO: ${dentist.cro}',
+                              'CRO: ${dentist.cro ?? 'N/A'}',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -352,7 +352,7 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    patient.phone,
+                                    patient.phone ?? 'Não informado',
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       fontSize: 13,

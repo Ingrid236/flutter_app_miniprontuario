@@ -1,15 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/utils/secure_storage_service.dart';
-import '../data/patient_repository.dart';
+import '../../../core/network/api_client.dart';
 import '../domain/patient.dart';
 import '../domain/patient_service.dart';
-
-// Provider for PatientService
-final patientServiceProvider = Provider<PatientService>((ref) {
-  final repository = ref.watch(patientRepositoryProvider);
-  final secureStorage = ref.watch(secureStorageProvider);
-  return PatientService(repository, secureStorage);
-});
 
 // Notifier for managing patient lists and queries using AsyncNotifier
 class PatientsListNotifier extends AsyncNotifier<List<Patient>> {
@@ -53,6 +45,14 @@ final patientDetailProvider = FutureProvider.family
       return await service.getPatient(id);
     });
 
+// Global provider for the AI generated clinical risk report
+final patientAiAnalysisProvider = FutureProvider.family
+    .autoDispose<String, String>((ref, id) async {
+      final apiClient = ref.watch(apiClientProvider);
+      final response = await apiClient.post('/ai/analyze-patient/$id', {});
+      return response['analysis'] as String;
+    });
+
 // Controller notifier for creating, updating, and deleting patients
 class PatientController extends Notifier<AsyncValue<void>> {
   @override
@@ -64,10 +64,10 @@ class PatientController extends Notifier<AsyncValue<void>> {
     required String name,
     required DateTime birthDate,
     required String cpf,
-    required String phone,
+    String? phone,
     String? allergies,
+    String? systemicDiseases,
     String? medications,
-    String? chronicDiseases,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -78,8 +78,8 @@ class PatientController extends Notifier<AsyncValue<void>> {
         cpf: cpf,
         phone: phone,
         allergies: allergies,
+        systemicDiseases: systemicDiseases,
         medications: medications,
-        chronicDiseases: chronicDiseases,
       );
       ref.invalidate(patientsListProvider);
       state = const AsyncValue.data(null);
@@ -95,10 +95,10 @@ class PatientController extends Notifier<AsyncValue<void>> {
     required String name,
     required DateTime birthDate,
     required String cpf,
-    required String phone,
+    String? phone,
     String? allergies,
+    String? systemicDiseases,
     String? medications,
-    String? chronicDiseases,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -110,8 +110,8 @@ class PatientController extends Notifier<AsyncValue<void>> {
         cpf: cpf,
         phone: phone,
         allergies: allergies,
+        systemicDiseases: systemicDiseases,
         medications: medications,
-        chronicDiseases: chronicDiseases,
       );
       ref.invalidate(patientsListProvider);
       ref.invalidate(patientDetailProvider(id));
@@ -143,3 +143,26 @@ final patientControllerProvider =
     NotifierProvider<PatientController, AsyncValue<void>>(() {
       return PatientController();
     });
+
+// Notifier to track whether the user has consented and requested the AI risk analysis for patients.
+class AiConsentNotifier extends Notifier<Map<String, bool>> {
+  @override
+  Map<String, bool> build() {
+    return const {};
+  }
+
+  void consent(String patientId) {
+    state = {
+      ...state,
+      patientId: true,
+    };
+  }
+}
+
+final aiConsentProvider =
+    NotifierProvider<AiConsentNotifier, Map<String, bool>>(() {
+      return AiConsentNotifier();
+    });
+
+
+

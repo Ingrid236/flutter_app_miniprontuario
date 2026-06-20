@@ -1,87 +1,88 @@
+/// Patient domain model — maps to the backend's PatientResponse DTO.
 class Patient {
   final String id;
-  final String dentistId;
   final String name;
   final DateTime birthDate;
   final String cpf;
-  final String phone;
+  final String? phone;
   final String? allergies;
+  /// Maps to `systemicDiseases` in the backend (formerly `chronicDiseases`).
+  final String? systemicDiseases;
   final String? medications;
-  final String? chronicDiseases;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Patient({
     required this.id,
-    required this.dentistId,
     required this.name,
     required this.birthDate,
     required this.cpf,
-    required this.phone,
+    this.phone,
     this.allergies,
+    this.systemicDiseases,
     this.medications,
-    this.chronicDiseases,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'dentist_id': dentistId,
-      'name': name,
-      'birth_date': birthDate.toIso8601String(),
-      'cpf': cpf,
-      'phone': phone,
-      'allergies': allergies,
-      'medications': medications,
-      'chronic_diseases': chronicDiseases,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-    };
+  factory Patient.fromJson(Map<String, dynamic> json) {
+    return Patient(
+      id: json['id'].toString(),
+      name: json['name'] as String,
+      birthDate: DateTime.parse(json['birthDate'] as String),
+      cpf: json['cpf'] as String,
+      phone: json['phone'] as String?,
+      allergies: json['allergies'] as String?,
+      systemicDiseases: json['systemicDiseases'] as String?,
+      medications: json['medications'] as String?,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
+    );
   }
 
-  factory Patient.fromMap(Map<String, dynamic> map) {
-    return Patient(
-      id: map['id'] as String,
-      dentistId: map['dentist_id'] as String,
-      name: map['name'] as String,
-      birthDate: DateTime.parse(map['birth_date'] as String),
-      cpf: map['cpf'] as String,
-      phone: map['phone'] as String,
-      allergies: map['allergies'] as String?,
-      medications: map['medications'] as String?,
-      chronicDiseases: map['chronic_diseases'] as String?,
-      createdAt: DateTime.parse(map['created_at'] as String),
-      updatedAt: DateTime.parse(map['updated_at'] as String),
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'cpf': cpf,
+      'birthDate': '${birthDate.year.toString().padLeft(4, '0')}-'
+          '${birthDate.month.toString().padLeft(2, '0')}-'
+          '${birthDate.day.toString().padLeft(2, '0')}',
+      if (phone != null) 'phone': phone,
+      if (allergies != null) 'allergies': allergies,
+      if (systemicDiseases != null) 'systemicDiseases': systemicDiseases,
+      if (medications != null) 'medications': medications,
+    };
   }
 
   Patient copyWith({
     String? id,
-    String? dentistId,
     String? name,
     DateTime? birthDate,
     String? cpf,
     String? phone,
     String? allergies,
+    String? systemicDiseases,
     String? medications,
-    String? chronicDiseases,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return Patient(
       id: id ?? this.id,
-      dentistId: dentistId ?? this.dentistId,
       name: name ?? this.name,
       birthDate: birthDate ?? this.birthDate,
       cpf: cpf ?? this.cpf,
       phone: phone ?? this.phone,
       allergies: allergies ?? this.allergies,
+      systemicDiseases: systemicDiseases ?? this.systemicDiseases,
       medications: medications ?? this.medications,
-      chronicDiseases: chronicDiseases ?? this.chronicDiseases,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
+
+

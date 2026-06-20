@@ -153,7 +153,7 @@ class PatientDetailScreen extends ConsumerWidget {
                       _buildInfoRow(
                         context,
                         Icons.phone_outlined,
-                        'Telefone: ${patient.phone}',
+                        'Telefone: ${patient.phone ?? 'Não informado'}',
                       ),
                     ],
                   ),
@@ -183,68 +183,232 @@ class PatientDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Medications Card (Amber/Orange alert)
+                // Systemic Diseases Card (Blue/Teal alert)
+                _buildAlertCard(
+                  context: context,
+                  title: 'Doenças Sistêmicas',
+                  content: patient.systemicDiseases,
+                  icon: Icons.healing_outlined,
+                  color: const Color(0xFF3B82F6),
+                  emptyText: 'Nenhuma doença sistêmica relatada.',
+                ),
+                const SizedBox(height: 12),
+
+                // Medications Card (Green alert)
                 _buildAlertCard(
                   context: context,
                   title: 'Medicamentos em Uso',
                   content: patient.medications,
-                  icon: Icons.medication_liquid_outlined,
-                  color: Colors.orangeAccent,
-                  emptyText: 'Nenhum medicamento de uso contínuo informado.',
+                  icon: Icons.medication_outlined,
+                  color: const Color(0xFF10B981),
+                  emptyText: 'Nenhum medicamento relatado.',
+                ),
+
+                const SizedBox(height: 20),
+
+                Text(
+                  'Análise de Risco por Inteligência Artificial',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 12),
 
-                // Chronic Diseases Card (Blue/Teal alert)
-                _buildAlertCard(
-                  context: context,
-                  title: 'Doenças Crônicas',
-                  content: patient.chronicDiseases,
-                  icon: Icons.healing_outlined,
-                  color: Theme.of(context).colorScheme.secondary,
-                  emptyText: 'Nenhuma doença crônica relatada.',
+                Consumer(
+                  builder: (context, ref, child) {
+                    final consentMap = ref.watch(aiConsentProvider);
+                    final isConsented = consentMap[patientId] ?? false;
+                    if (!isConsented) {
+                      return Container(
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.lock_outline_rounded,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Consentimento de Processamento de Dados',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Para gerar a análise de risco clínico por Inteligência Artificial, é necessário enviar as informações de anamnese do paciente para processamento externo na nuvem. Confirme o consentimento profissional para continuar.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                height: 1.4,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  ref.read(aiConsentProvider.notifier).consent(patientId);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.psychology_outlined, size: 20),
+                                label: const Text(
+                                  'Gerar Relatório de Risco Clínico com IA',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final aiState = ref.watch(patientAiAnalysisProvider(patientId));
+                    return aiState.when(
+                      data: (analysis) => Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.psychology_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Relatório de Risco Clínico IA',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              analysis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                height: 1.4,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      loading: () => Container(
+                        padding: const EdgeInsets.all(24.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: const Column(
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 12),
+                            Text('A IA está analisando o prontuário...'),
+                          ],
+                        ),
+                      ),
+                      error: (err, _) => Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+                          ),
+                        ),
+                        child: Text(
+                          'Erro ao gerar análise da IA: $err',
+                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 24),
 
                 // Procedures History Title and add procedure
-                SizedBox(
-                  width: double.infinity,
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      Text(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Text(
                         'Histórico de Procedimentos',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: Colors.white,
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            context.push('/patients/$patientId/procedures/new'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () =>
+                          context.push('/patients/$patientId/procedures/new'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text(
-                          'Adicionar',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
                         ),
                       ),
-                    ],
-                  ),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text(
+                        'Adicionar',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 16),

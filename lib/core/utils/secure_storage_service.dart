@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -8,40 +6,68 @@ class SecureStorageService {
 
   SecureStorageService(this._storage);
 
-  static const String _dbKeyName = 'db_encryption_key';
-  static const String _sessionKeyName = 'active_dentist_id';
+  static const String _accessTokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
+  static const String _dentistIdKey = 'dentist_id';
 
-  /// Retrieves the existing database encryption key, or creates a new one
-  /// if it does not exist.
-  Future<String> getOrCreateDatabaseKey() async {
-    String? key = await _storage.read(key: _dbKeyName);
-    if (key == null) {
-      key = _generateSecureKey();
-      await _storage.write(key: _dbKeyName, value: key);
-    }
-    return key;
+  // ─── Token Management ──────────────────────────────────────────────
+
+  /// Saves both JWT tokens after a successful login or refresh.
+  Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await _storage.write(key: _accessTokenKey, value: accessToken);
+    await _storage.write(key: _refreshTokenKey, value: refreshToken);
   }
 
-  /// Saves the active dentist session (ID).
+  Future<String?> getAccessToken() async {
+    return _storage.read(key: _accessTokenKey);
+  }
+
+  Future<String?> getRefreshToken() async {
+    return _storage.read(key: _refreshTokenKey);
+  }
+
+  Future<void> clearTokens() async {
+    await _storage.delete(key: _accessTokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _dentistIdKey);
+  }
+
+  // ─── Dentist ID (cached from /auth/me after login) ─────────────────
+
+  Future<void> saveDentistId(String dentistId) async {
+    await _storage.write(key: _dentistIdKey, value: dentistId);
+  }
+
+  Future<String?> getDentistId() async {
+    return _storage.read(key: _dentistIdKey);
+  }
+
+  // ─── Session Check ─────────────────────────────────────────────────
+
+  /// Returns true when the user has a stored access token (may need refresh).
+  Future<bool> hasSession() async {
+    final token = await _storage.read(key: _accessTokenKey);
+    return token != null;
+  }
+
+  // ─── Legacy alias (kept for router compatibility) ──────────────────
+
+  /// @deprecated Use [hasSession] + [saveDentistId] instead.
   Future<void> saveSession(String dentistId) async {
-    await _storage.write(key: _sessionKeyName, value: dentistId);
+    await saveDentistId(dentistId);
   }
 
-  /// Retrieves the active dentist ID if a session is present.
+  /// @deprecated Use [getDentistId] instead.
   Future<String?> getSession() async {
-    return await _storage.read(key: _sessionKeyName);
+    return getDentistId();
   }
 
-  /// Clears the active dentist session.
+  /// @deprecated Use [clearTokens] instead.
   Future<void> clearSession() async {
-    await _storage.delete(key: _sessionKeyName);
-  }
-
-  /// Helper to generate a random cryptographically secure string key
-  String _generateSecureKey() {
-    final random = Random.secure();
-    final values = List<int>.generate(32, (i) => random.nextInt(256));
-    return base64Url.encode(values);
+    await clearTokens();
   }
 }
 
@@ -49,3 +75,4 @@ class SecureStorageService {
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService(const FlutterSecureStorage());
 });
+

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import '../domain/procedure.dart';
 import 'procedure_providers.dart';
 
@@ -23,7 +22,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Excluir Procedimento'),
         content: Text(
-          'Deseja realmente excluir o procedimento "${procedure.type}"?',
+          'Deseja realmente excluir o procedimento "${procedure.description}"?',
         ),
         actions: [
           TextButton(
@@ -71,7 +70,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: const Color(0xFF334155).withValues(alpha: 0.3),
               ),
             ),
             child: Center(
@@ -93,7 +92,6 @@ class ProcedureTimelineWidget extends ConsumerWidget {
           itemCount: procedures.length,
           itemBuilder: (context, index) {
             final procedure = procedures[index];
-            final isCompleted = procedure.status == 'Completed';
 
             return IntrinsicHeight(
               child: Row(
@@ -106,9 +104,9 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                         width: 14,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: isCompleted
+                          color: procedure.status == 'COMPLETED'
                               ? const Color(0xFF10B981)
-                              : const Color(0xFFF59E0B), // Green vs Amber
+                              : const Color(0xFF3B82F6),
                           shape: BoxShape.circle,
                           border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
                         ),
@@ -133,7 +131,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant,
+                          color: const Color(0xFF334155).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -141,11 +139,11 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 child: Text(
-                                  procedure.type,
+                                  procedure.description,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -154,77 +152,42 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              // Status Badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      (isCompleted
-                                              ? const Color(0xFF10B981)
-                                              : const Color(0xFFF59E0B))
-                                          .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isCompleted
-                                        ? const Color(0xFF10B981)
-                                        : const Color(0xFFF59E0B),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  isCompleted ? 'Concluído' : 'Planejado',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: isCompleted
-                                        ? const Color(0xFF10B981)
-                                        : const Color(0xFFF59E0B),
-                                  ),
-                                ),
-                              ),
+                              _buildStatusBadge(context, procedure.status),
                             ],
                           ),
                           const SizedBox(height: 10),
 
-                          // Date, Tooth, Cost Info
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
+                          // Date, Tooth, Cost
+                          Row(
+                            children: [
+                              _buildMetaItem(
+                                context,
+                                Icons.calendar_month_outlined,
+                                _formatDate(procedure.date),
+                              ),
+                              if (procedure.tooth != null &&
+                                  procedure.tooth!.trim().isNotEmpty) ...[
+                                const SizedBox(width: 12),
                                 _buildMetaItem(
                                   context,
-                                  Icons.calendar_month_outlined,
-                                  _formatDate(procedure.date),
+                                  Icons.tag,
+                                  'Dente ${procedure.tooth}',
                                 ),
-                                if (procedure.tooth != null &&
-                                    procedure.tooth!.trim().isNotEmpty) ...[
-                                  const SizedBox(width: 12),
-                                  _buildMetaItem(
-                                    context,
-                                    Icons.tag,
-                                    'Dente ${procedure.tooth}',
-                                  ),
-                                ],
-                                if (procedure.cost != null) ...[
-                                  const SizedBox(width: 12),
-                                  _buildMetaItem(
-                                    context,
-                                    Icons.payments_outlined,
-                                    NumberFormat.simpleCurrency(
-                                      locale: Localizations.maybeLocaleOf(context)?.toString() ?? 'pt_BR',
-                                    ).format(procedure.cost),
-                                  ),
-                                ],
                               ],
-                            ),
+                              if (procedure.cost != null) ...[
+                                const SizedBox(width: 12),
+                                _buildMetaItem(
+                                  context,
+                                  Icons.attach_money,
+                                  'R\$ ${procedure.cost!.toStringAsFixed(2).replaceAll('.', ',')}',
+                                ),
+                              ],
+                            ],
                           ),
 
-                          // Observations
-                          if (procedure.observations != null &&
-                              procedure.observations!.trim().isNotEmpty) ...[
+                          // Notes
+                          if (procedure.notes != null &&
+                              procedure.notes!.trim().isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.all(10.0),
@@ -234,7 +197,7 @@ class ProcedureTimelineWidget extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
-                                procedure.observations!,
+                                procedure.notes!,
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -318,6 +281,31 @@ class ProcedureTimelineWidget extends ConsumerWidget {
           style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context, String status) {
+    final isCompleted = status == 'COMPLETED';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isCompleted
+            ? const Color(0xFF10B981).withOpacity(0.1)
+            : const Color(0xFF3B82F6).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isCompleted ? const Color(0xFF10B981) : const Color(0xFF3B82F6),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        isCompleted ? 'Concluído' : 'Planejado',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: isCompleted ? const Color(0xFF10B981) : const Color(0xFF3B82F6),
+        ),
+      ),
     );
   }
 }

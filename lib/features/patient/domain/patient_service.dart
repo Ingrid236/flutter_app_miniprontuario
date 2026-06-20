@@ -1,61 +1,32 @@
-import 'package:uuid/uuid.dart';
-import '../../../core/utils/secure_storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/patient_repository.dart';
 import 'patient.dart';
 
 class PatientService {
   final PatientRepository _patientRepository;
-  final SecureStorageService _secureStorage;
-  static const _uuid = Uuid();
 
-  PatientService(this._patientRepository, this._secureStorage);
-
-  Future<String> _getRequiredSession() async {
-    final dentistId = await _secureStorage.getSession();
-    if (dentistId == null) {
-      throw Exception(
-        'Sessão profissional não encontrada. Faça login novamente.',
-      );
-    }
-    return dentistId;
-  }
+  PatientService(this._patientRepository);
 
   Future<Patient> createPatient({
     required String name,
     required DateTime birthDate,
     required String cpf,
-    required String phone,
+    String? phone,
     String? allergies,
+    String? systemicDiseases,
     String? medications,
-    String? chronicDiseases,
   }) async {
-    final dentistId = await _getRequiredSession();
-
-    // Check unique CPF per dentist
-    final existing = await _patientRepository.getPatientByCpf(dentistId, cpf);
-    if (existing != null) {
-      throw Exception('Já existe um paciente cadastrado com este CPF.');
-    }
-
-    final id = _uuid.v4();
-    final now = DateTime.now();
-
     final patient = Patient(
-      id: id,
-      dentistId: dentistId,
+      id: '', // Backend will assign ID
       name: name,
       birthDate: birthDate,
       cpf: cpf,
       phone: phone,
       allergies: allergies,
+      systemicDiseases: systemicDiseases,
       medications: medications,
-      chronicDiseases: chronicDiseases,
-      createdAt: now,
-      updatedAt: now,
     );
-
-    await _patientRepository.createPatient(patient);
-    return patient;
+    return await _patientRepository.createPatient(patient);
   }
 
   Future<Patient> updatePatient({
@@ -63,68 +34,45 @@ class PatientService {
     required String name,
     required DateTime birthDate,
     required String cpf,
-    required String phone,
+    String? phone,
     String? allergies,
+    String? systemicDiseases,
     String? medications,
-    String? chronicDiseases,
   }) async {
-    final dentistId = await _getRequiredSession();
-
-    // Get original patient
-    final original = await _patientRepository.getPatientById(id);
-    if (original == null || original.dentistId != dentistId) {
-      throw Exception('Paciente não encontrado ou acesso não autorizado.');
-    }
-
-    // Check unique CPF per dentist if CPF is changed
-    if (original.cpf != cpf) {
-      final existing = await _patientRepository.getPatientByCpf(dentistId, cpf);
-      if (existing != null) {
-        throw Exception('Já existe outro paciente cadastrado com este CPF.');
-      }
-    }
-
-    final now = DateTime.now();
-    final updated = original.copyWith(
+    final patient = Patient(
+      id: id,
       name: name,
       birthDate: birthDate,
       cpf: cpf,
       phone: phone,
       allergies: allergies,
+      systemicDiseases: systemicDiseases,
       medications: medications,
-      chronicDiseases: chronicDiseases,
-      updatedAt: now,
     );
-
-    await _patientRepository.updatePatient(updated);
-    return updated;
+    return await _patientRepository.updatePatient(patient);
   }
 
   Future<void> deletePatient(String id) async {
-    final dentistId = await _getRequiredSession();
-    final original = await _patientRepository.getPatientById(id);
-    if (original == null || original.dentistId != dentistId) {
-      throw Exception('Paciente não encontrado ou acesso não autorizado.');
-    }
     await _patientRepository.deletePatient(id);
   }
 
   Future<Patient?> getPatient(String id) async {
-    final dentistId = await _getRequiredSession();
-    final patient = await _patientRepository.getPatientById(id);
-    if (patient != null && patient.dentistId != dentistId) {
-      throw Exception('Acesso negado: você não tem permissão para visualizar os dados deste paciente.');
-    }
-    return patient;
+    return await _patientRepository.getPatientById(id);
   }
 
   Future<List<Patient>> getPatients() async {
-    final dentistId = await _getRequiredSession();
-    return await _patientRepository.getPatientsForDentist(dentistId);
+    return await _patientRepository.listPatients();
   }
 
   Future<List<Patient>> search(String query) async {
-    final dentistId = await _getRequiredSession();
-    return await _patientRepository.searchPatients(dentistId, query);
+    return await _patientRepository.searchPatients(query);
   }
 }
+
+// Provider for PatientService
+final patientServiceProvider = Provider<PatientService>((ref) {
+  final repository = ref.watch(patientRepositoryProvider);
+  return PatientService(repository);
+});
+
+
